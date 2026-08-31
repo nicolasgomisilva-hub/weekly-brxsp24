@@ -1065,11 +1065,23 @@ function boot(){
       const versionTag = (backendV === APP_VERSION) ? APP_VERSION : ('front ' + APP_VERSION + ' / back ' + backendV + ' ⚠️ DIFERENTES');
       pill.textContent = '🟢 conectado · ' + versionTag;
     }
-    applyAdminUI();
-    renderAllCharts();
-    applyEditableNotes();
-    wireNavigation();
-    applyVisibilityLocks();
+    // Cada etapa roda isolada — se UMA travar (ex.: um gráfico com dado
+    // estranho), as outras continuam rodando mesmo assim. Antes, se
+    // renderAllCharts() travasse no meio, wireNavigation() nunca chegava
+    // a rodar — e a navegação (setinhas, bolinhas, slides móveis) sumia
+    // inteira, mesmo sem ter nada a ver com o problema real.
+    function isolado(nome, fn){
+      try { fn(); }
+      catch(err){
+        console.error('Falha isolada em ' + nome + ':', err);
+        showToast('Uma parte do app teve um problema (' + nome + ')', ['Mensagem técnica: ' + (err && err.message ? err.message : err), 'O resto do app continua funcionando normalmente.']);
+      }
+    }
+    isolado('applyAdminUI', applyAdminUI);
+    isolado('renderAllCharts', renderAllCharts);
+    isolado('applyEditableNotes', applyEditableNotes);
+    isolado('wireNavigation', wireNavigation);
+    isolado('applyVisibilityLocks', applyVisibilityLocks);
 
     // avisos por seção (ex.: uma aba vazia/renomeada) — NÃO usam o banner de
     // tela cheia (isso bloquearia clique em tudo por baixo); só um toast
@@ -2137,36 +2149,40 @@ function renderAcoesFim(){
     </div>`).join('');
 }
 
+function tentarGrafico(nome, fn){
+  try { fn(); }
+  catch(err){ console.error('Falha isolada no gráfico ' + nome + ':', err); }
+}
 function renderAllCharts(){
   // ---- Safety ----
-  renderComboBarLinha('chartOcorrencias', 'Ocorrencias Abertas', 'Safety', 'weekRangeSafety1');
-  renderComboBarLinha('chartDesvios', 'Desvios em Aberto', 'Safety', 'weekRangeSafety1b');
+  tentarGrafico('chartOcorrencias', ()=>renderComboBarLinha('chartOcorrencias', 'Ocorrencias Abertas', 'Safety', 'weekRangeSafety1'));
+  tentarGrafico('chartDesvios', ()=>renderComboBarLinha('chartDesvios', 'Desvios em Aberto', 'Safety', 'weekRangeSafety1b'));
 
   // Paretos de Safety continuam fictícios — [She] Ocorrencias / Desvios ainda vazias na planilha.
-  paretoChart('chartParetoOcorrencias', ['Queda de material','EPI incompleto','Piso molhado','Empilhadeira','Sinalização','Outros'], [24,18,12,9,6,4]);
-  paretoChart('chartParetoDesvios', ['Procedimento não seguido','Falta de sinalização','Área desorganizada','Ferramenta inadequada','Outros'], [19,14,10,7,3]);
+  tentarGrafico('chartParetoOcorrencias', ()=>paretoChart('chartParetoOcorrencias', ['Queda de material','EPI incompleto','Piso molhado','Empilhadeira','Sinalização','Outros'], [24,18,12,9,6,4]));
+  tentarGrafico('chartParetoDesvios', ()=>paretoChart('chartParetoDesvios', ['Procedimento não seguido','Falta de sinalização','Área desorganizada','Ferramenta inadequada','Outros'], [19,14,10,7,3]));
 
   // ---- Flow ----
-  renderVolumeCohort('chartVolume', 'Volume Real', 'weekRangeFlow1');
-  renderVolumeCohort('chartVolumeV3', 'Volume Real V3', 'weekRangeFlow1v3');
-  renderVolumeCohort('chartVolumeV4', 'Volume Real V4', 'weekRangeFlow1v4');
-  renderPlanoChart('chartPlano', 'Plano vs Volume Real', 'Volume Real', 'weekRangeFlow2a');
-  renderPlanoChart('chartPlanoV3', 'Plano vs Volume Real V3', 'Volume Real V3', 'weekRangeFlow2v3');
-  renderPlanoChart('chartPlanoV4', 'Plano vs Volume Real V4', 'Volume Real V4', 'weekRangeFlow2v4');
+  tentarGrafico('chartVolume', ()=>renderVolumeCohort('chartVolume', 'Volume Real', 'weekRangeFlow1'));
+  tentarGrafico('chartVolumeV3', ()=>renderVolumeCohort('chartVolumeV3', 'Volume Real V3', 'weekRangeFlow1v3'));
+  tentarGrafico('chartVolumeV4', ()=>renderVolumeCohort('chartVolumeV4', 'Volume Real V4', 'weekRangeFlow1v4'));
+  tentarGrafico('chartPlano', ()=>renderPlanoChart('chartPlano', 'Plano vs Volume Real', 'Volume Real', 'weekRangeFlow2a'));
+  tentarGrafico('chartPlanoV3', ()=>renderPlanoChart('chartPlanoV3', 'Plano vs Volume Real V3', 'Volume Real V3', 'weekRangeFlow2v3'));
+  tentarGrafico('chartPlanoV4', ()=>renderPlanoChart('chartPlanoV4', 'Plano vs Volume Real V4', 'Volume Real V4', 'weekRangeFlow2v4'));
   // Ociosidade desconsiderada por enquanto, a pedido — indicador continua
   // mapeado no INDICATOR_CONFIG, só não é mais renderizado aqui.
 
   // ---- Abs ---- (agora barra Total amarela + linha por turno, igual Safety)
-  renderAbsCohort('chartAbsGeral', 'Abs Geral', 'weekRangeAbs1');
-  renderAbsPareto('chartAbsOfensor', STATE.abs_ofensor, 'OFENSOR', '#111111');
-  renderAbsPareto('chartAbsArea', STATE.abs_area, 'AREA', '#E6C200');
+  tentarGrafico('chartAbsGeral', ()=>renderAbsCohort('chartAbsGeral', 'Abs Geral', 'weekRangeAbs1'));
+  tentarGrafico('chartAbsOfensor', ()=>renderAbsPareto('chartAbsOfensor', STATE.abs_ofensor, 'OFENSOR', '#111111'));
+  tentarGrafico('chartAbsArea', ()=>renderAbsPareto('chartAbsArea', STATE.abs_area, 'AREA', '#E6C200'));
 
   // ---- Prod ----
-  renderGroupedTurno('chartDOT', 'DOT', 'Prod', 'weekRangeProd1a', true);
-  renderGroupedTurno('chartOOT', 'OOT', 'Prod', 'weekRangeProd1b', true);
+  tentarGrafico('chartDOT', ()=>renderGroupedTurno('chartDOT', 'DOT', 'Prod', 'weekRangeProd1a', true));
+  tentarGrafico('chartOOT', ()=>renderGroupedTurno('chartOOT', 'OOT', 'Prod', 'weekRangeProd1b', true));
 
-  updateCoverWeekLabel();
-  renderAcoesFim();
+  tentarGrafico('updateCoverWeekLabel', updateCoverWeekLabel);
+  tentarGrafico('renderAcoesFim', renderAcoesFim);
 }
 
 /* ====================================================================
