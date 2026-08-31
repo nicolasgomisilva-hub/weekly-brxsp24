@@ -1226,7 +1226,14 @@ function flatFlow(){
 function goTo(name){
   document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
   const target = document.querySelector('[data-slide="'+name+'"]');
-  if (target) target.classList.add('active');
+  if (target) {
+    target.classList.add('active');
+  } else {
+    // antes isso falhava calado — agora avisa na tela qual ID não foi
+    // encontrado, sem precisar abrir o Console pra descobrir
+    console.error('goTo: nenhum slide encontrado com id "' + name + '"');
+    showToast('Não encontrei esse slide na tela', ['ID procurado: ' + name, 'Pode ser que ele não tenha sido criado corretamente — abre o gerenciador de slides e confere se ele aparece na lista.']);
+  }
   applyVisibilityLocks();
 }
 function applyVisibilityLocks(){
@@ -1310,6 +1317,7 @@ function renderMovableSlides(){
       // impedir os outros de serem criados — antes, um erro aqui parava o
       // forEach inteiro no meio, e nenhum slide depois dele era criado.
       console.error('Falha isolada ao criar o slide móvel ' + (s && s.id) + ':', err);
+      showToast('Um slide móvel não pôde ser criado na tela', ['Slide: ' + (s && s.titulo) + ' (' + (s && s.id) + ')', 'Erro: ' + (err && err.message ? err.message : err)]);
     }
   });
 }
