@@ -987,17 +987,28 @@ function jsonp(url){
   });
 }
 
+let pendingSaves = 0; // quantas escritas em segundo plano ainda não terminaram
+window.addEventListener('beforeunload', function(e){
+  if (pendingSaves > 0) {
+    e.preventDefault();
+    e.returnValue = ''; // navegadores modernos ignoram o texto, mas precisam disso setado pra mostrar o aviso
+  }
+});
+
 function apiCall(fnName, payload){
+  const isWrite = !!WRITE_ACTIONS[fnName];
+  if (isWrite) pendingSaves++;
   return new Promise((resolve, reject)=>{
     // Nunca deixa a chamada ficar pendurada pra sempre.
     let done = false;
     const timeoutId = setTimeout(()=>{
       if (done) return;
       done = true;
+      if (isWrite) pendingSaves = Math.max(0, pendingSaves-1);
       reject('Tempo esgotado (25s) esperando resposta de ' + API_URL);
     }, 25000);
-    function ok(v){ if (done) return; done = true; clearTimeout(timeoutId); resolve(v); }
-    function fail(e){ if (done) return; done = true; clearTimeout(timeoutId); reject(e); }
+    function ok(v){ if (done) return; done = true; clearTimeout(timeoutId); if (isWrite) pendingSaves = Math.max(0, pendingSaves-1); resolve(v); }
+    function fail(e){ if (done) return; done = true; clearTimeout(timeoutId); if (isWrite) pendingSaves = Math.max(0, pendingSaves-1); reject(e); }
 
     if (!API_URL || API_URL.indexOf('COLE_SUA_URL') !== -1){
       fail('API_URL ainda não foi preenchida no topo do <script>.');
