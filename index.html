@@ -867,6 +867,7 @@ document.addEventListener('click', function(e){
       renderBlocosList();
       break;
     }
+    case 'gotoSlide': { closeModal(); goTo(a); break; }
     case 'toggleConcluido': toggleConcluido(a); break;
   }
 });
@@ -1299,7 +1300,7 @@ function renderSlideManagerBody(){
       ${slides.map(s => `
         <div class="ms-slide" draggable="${!s.fixo}" data-id="${s.id}">
           <span class="${s.fixo?'lock':'grip'}">${s.fixo?'🔒':'⠿'}</span>
-          <span>${escapeHtml(s.titulo)}</span>
+          <span data-action="gotoSlide" data-a="${s.id}" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;" title="Ir direto pra esse slide">${escapeHtml(s.titulo)}</span>
           <span class="tag ${s.fixo?'fixed':''}">${s.fixo?'fixo':'móvel'}</span>
           <div class="vis-group">
             <div class="vis-btn ${s.visibilidade==='visivel'?'active':''}" title="Visível" data-action="setVis" data-a="${s.id}" data-b="visivel">👁</div>
