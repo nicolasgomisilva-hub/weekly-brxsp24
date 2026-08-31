@@ -862,11 +862,16 @@ document.querySelectorAll('.slide').forEach(s=>{
 });
 
 /* ====================================================================
-   CONEXÃO COM O BACKEND (Code.gs) — via fetch() puro, na URL pública /exec
+   CONEXÃO COM O BACKEND (Code.gs) — via JSONP (não fetch!)
 
-   >>> COLE AQUI A URL DO SEU DEPLOY (a que termina em /exec) <<<
-   Precisa estar publicado com "Quem tem acesso: Qualquer pessoa" — sem
-   isso, essa chamada cai numa tela de login e falha.
+   Por quê JSONP e não fetch(): a página agora mora em outro domínio
+   (GitHub Pages) e o backend mora em script.google.com — o Google não
+   devolve o cabeçalho de CORS que o fetch() exige, então o navegador
+   bloqueia a leitura da resposta (confirmado no Console: "blocked by
+   CORS policy"). JSONP usa uma tag <script src="..."> pra buscar o dado
+   em vez de fetch — tags <script> nunca são bloqueadas por CORS, é assim
+   que qualquer CDN funciona. O Code.gs já devolve a resposta embrulhada
+   em "callback(...)" quando recebe ?callback=algumNome.
 
    APP_VERSION é só pra confirmar, no selo do topo da capa, se o deploy
    pegou o código mais novo.
@@ -879,6 +884,18 @@ const READ_ACTIONS = { apiWhoAmI:'whoami', apiScorecard:'scorecard', apiAbsOfens
 const WRITE_ACTIONS = { apiAddAcao:'add_acao', apiUpdateAcao:'update_acao', apiAddComentario:'add_comentario',
   apiAddSlide:'add_slide', apiUpdateSlide:'update_slide', apiDeleteSlide:'delete_slide',
   apiReorderSlides:'reorder_slides', apiSetVisibility:'set_visibility', apiAddLink:'add_link', apiUpdateLink:'update_link' };
+
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'jsonpCb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    function cleanup(){ delete window[cbName]; script.remove(); }
+    window[cbName] = function(data){ cleanup(); resolve(data); };
+    script.onerror = function(){ cleanup(); reject('Não consegui carregar o script (JSONP) — confirme a API_URL e se o Deploy está com acesso "Qualquer pessoa".'); };
+    script.src = url + (url.indexOf('?')===-1 ? '?' : '&') + 'callback=' + cbName;
+    document.body.appendChild(script);
+  });
+}
 
 function apiCall(fnName, payload){
   return new Promise((resolve, reject)=>{
@@ -897,20 +914,16 @@ function apiCall(fnName, payload){
       return;
     }
 
+    let url = null;
     if (READ_ACTIONS[fnName]) {
-      fetch(API_URL + '?action=' + READ_ACTIONS[fnName])
-        .then(r=>r.json())
-        .then(j=> j.ok ? ok(j.data) : fail(j.error))
-        .catch(e=>fail('Falha de rede: ' + e.message + ' — confirme que o Deploy está com acesso "Qualquer pessoa".'));
+      url = API_URL + '?action=' + READ_ACTIONS[fnName];
     } else if (WRITE_ACTIONS[fnName]) {
-      fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify(Object.assign({ action: WRITE_ACTIONS[fnName] }, payload || {})) })
-        .then(r=>r.json())
-        .then(j=> j.ok ? ok(j.data) : fail(j.error))
-        .catch(e=>fail('Falha de rede ao salvar: ' + e.message));
+      url = API_URL + '?action=' + WRITE_ACTIONS[fnName] + '&payload=' + encodeURIComponent(JSON.stringify(payload || {}));
     } else {
       fail('função desconhecida: ' + fnName);
+      return;
     }
+    jsonp(url).then(j=> j.ok ? ok(j.data) : fail(j.error)).catch(fail);
   });
 }
 
