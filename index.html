@@ -518,9 +518,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="areas">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span class="on"></span><span></span><span></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="safety-2">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -540,9 +540,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="safety-1">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span></span><span class="on"></span><span></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="safety-3">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -562,9 +562,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="safety-2">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span></span><span></span><span class="on"></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="flow-1">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -599,9 +599,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="safety-3">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span class="on"></span><span></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="flow-2">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -630,9 +630,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="flow-1">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span></span><span class="on"></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="abs-1">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -663,9 +663,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="flow-2">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span class="on"></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="prod-1">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -696,9 +696,9 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="abs-1">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
       <div class="progress"><span class="on"></span></div>
-      <div class="nav-arrow" data-action="goto" data-a="qualidade-1">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -716,8 +716,8 @@ body{
       </div>
     </div>
     <div class="bottombar">
-      <div class="nav-arrow" data-action="goto" data-a="prod-1">←</div>
-      <div class="nav-arrow" data-action="goto" data-a="fim">→</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
+      <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
     </div>
   </section>
 
@@ -901,6 +901,7 @@ document.addEventListener('click', function(e){
       break;
     }
     case 'gotoSlide': { closeModal(); goTo(a); break; }
+    case 'navRelative': goToRelative(a); break;
     case 'toggleConcluido': toggleConcluido(a); break;
   }
 });
@@ -1248,30 +1249,45 @@ function applyVisibilityLocks(){
     ls.classList.toggle('show', !!(s && s.visibilidade === 'bloqueado'));
   });
 }
+// Calcula e navega pro slide anterior/próximo SEMPRE na hora do clique —
+// nunca depende de nada ter sido "religado" antes. Antes, wireNavigation()
+// pré-calculava e gravava o destino de cada seta uma única vez; se um
+// slide móvel fosse criado depois disso sem uma atualização perfeita,
+// a seta continuava apontando pro destino antigo. Agora não tem esse
+// risco: cada clique recalcula tudo do zero, a partir do slide ativo
+// e da lista atual de STATE.slides.
+function goToRelative(direction){
+  const activeEl = document.querySelector('.slide.active');
+  if (!activeEl) return;
+  const currentId = activeEl.dataset.slide;
+  const flat = flatFlow();
+  const idx = flat.findIndex(e=>e.id===currentId);
+  if (idx === -1) return; // slide ativo não é de área (capa/areas/fim) — não deveria chamar isso
+  const targetIdx = direction==='next' ? idx+1 : idx-1;
+  if (targetIdx < 0) { goTo('areas'); return; }
+  if (targetIdx >= flat.length) { goTo('fim'); return; }
+  goTo(flat[targetIdx].id);
+}
+
 function wireNavigation(){
   renderMovableSlides();
+  // as setas não precisam mais ser "religadas" aqui — usam navRelative,
+  // que calcula o destino na hora. Só as bolinhas de progresso (que
+  // mostram POSIÇÃO, não destino) ainda precisam ser atualizadas sempre
+  // que a lista de slides mudar.
   const flat = flatFlow();
-  flat.forEach((entry, i)=>{
+  flat.forEach((entry)=>{
     try {
       const el = document.querySelector('[data-slide="'+entry.id+'"]');
       if (!el) return;
       const bb = el.querySelector('.bottombar');
       if (!bb) return;
-      const arrows = bb.querySelectorAll('.nav-arrow');
-      const prevId = i>0 ? flat[i-1].id : 'areas';
-      const nextId = i<flat.length-1 ? flat[i+1].id : 'fim';
-      if (arrows[0]) arrows[0].onclick = ()=>goTo(prevId);
-      if (arrows[arrows.length-1]) arrows[arrows.length-1].onclick = ()=>goTo(nextId);
       const areaSlides = visibleSlidesForArea(entry.area);
       const idxInArea = areaSlides.findIndex(s=>s.id===entry.id);
       const prog = bb.querySelector('.progress');
       if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'" data-action="goto" data-a="'+s.id+'" title="'+escapeAttr(s.titulo||'')+'"></span>').join('');
     } catch(err){
-      // um slide com problema NÃO pode travar a montagem dos outros — antes,
-      // um erro aqui no meio da lista deixava TODOS os slides seguintes
-      // (inclusive áreas inteiras, tipo Qualidade, que é a última) sem
-      // navegação nenhuma, mesmo sem ter nada a ver com o slide quebrado.
-      console.error('Falha isolada ao ligar navegação do slide ' + entry.id + ':', err);
+      console.error('Falha isolada ao atualizar bolinhas do slide ' + entry.id + ':', err);
     }
   });
 }
@@ -1299,9 +1315,9 @@ function renderMovableSlides(){
         </div>
         <div class="body">${renderSlideContentHTML(s)}</div>
         <div class="bottombar">
-          <div class="nav-arrow">←</div>
+          <div class="nav-arrow" data-action="navRelative" data-a="prev">←</div>
           <div class="progress"></div>
-          <div class="nav-arrow">→</div>
+          <div class="nav-arrow" data-action="navRelative" data-a="next">→</div>
         </div>`;
       document.getElementById('deck').appendChild(el);
       const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
