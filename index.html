@@ -1144,14 +1144,15 @@ function goTo(name){
   applyVisibilityLocks();
 }
 function applyVisibilityLocks(){
-  const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+  // Antes só bloqueava pra "não-admin" — como agora todo mundo edita (sem
+  // distinção de admin), isso nunca aparecia pra ninguém. "Bloqueado" agora
+  // vale igual pra qualquer pessoa vendo a apresentação, sem excessão.
   document.querySelectorAll('.slide').forEach(slideEl=>{
     const id = slideEl.dataset.slide;
     const s = STATE.slides.find(x=>x.id===id);
     const ls = slideEl.querySelector('.lock-screen');
     if (!ls) return;
-    const blocked = s && s.visibilidade === 'bloqueado' && !isAdmin;
-    ls.classList.toggle('show', !!blocked);
+    ls.classList.toggle('show', !!(s && s.visibilidade === 'bloqueado'));
   });
 }
 function wireNavigation(){
@@ -1293,6 +1294,27 @@ function setVis(id, vis){
     renderSlideManagerBody(); wireNavigation(); applyVisibilityLocks();
   }).catch(err=>alert('Erro ao alterar visibilidade: '+err));
 }
+// Trava um botão enquanto uma operação assíncrona está em andamento —
+// impede o duplo-clique que criava slide/ação repetida (a pessoa clicava
+// de novo achando que não tinha funcionado, sem nenhum retorno visual).
+function setBusy(el, busyText){
+  if (!el || el.dataset.busy === '1') return function(){};
+  el.dataset.busy = '1';
+  el.dataset._prevText = el.textContent;
+  el.disabled = true;
+  el.style.opacity = '.6';
+  el.style.cursor = 'wait';
+  el.textContent = busyText || 'Salvando...';
+  return function restore(){
+    el.disabled = false;
+    el.style.opacity = '';
+    el.style.cursor = '';
+    el.textContent = el.dataset._prevText;
+    delete el.dataset.busy;
+  };
+}
+function isBusy(el){ return !!(el && el.dataset.busy === '1'); }
+
 function removeSlide(id){
   if (!confirm('Excluir este slide móvel? Essa ação não pode ser desfeita.')) return;
   apiCall('apiDeleteSlide', { id }).then(()=>{
@@ -1344,6 +1366,10 @@ function renderSlideFormFields(conteudo){
   }
 }
 function saveSlideForm(){
+  const btn = document.querySelector('#slideFormOverlay .btn-solid');
+  if (isBusy(btn)) return; // já está salvando — ignora clique repetido
+  const restore = setBusy(btn, 'Salvando...');
+
   const tipo = document.getElementById('sfTipo').value;
   const titulo = document.getElementById('sfTitulo').value || 'Novo slide';
   let conteudo = {};
@@ -1360,8 +1386,9 @@ function saveSlideForm(){
   call.then(res=>{
     return apiCall('apiSlides').then(slides=>{ STATE.slides = slides; });
   }).then(()=>{
+    restore();
     closeSlideForm(); renderSlideManagerBody(); wireNavigation();
-  }).catch(err=>alert('Erro ao salvar slide: '+err));
+  }).catch(err=>{ restore(); alert('Erro ao salvar slide: '+err); });
 }
 
 /* ====================================================================
@@ -1447,10 +1474,13 @@ function toggleConcluido(id){
   }).catch(err=>alert('Erro ao concluir: '+err));
 }
 function submitAcao(){
+  const btn = document.querySelector('#formAcao .sp-submit');
+  if (isBusy(btn)) return;
   const atual = document.getElementById('acaoAtual').value.trim();
   const errBox = document.getElementById('acaoError');
   if (!atual){ errBox.textContent = 'Preencha "Atual" — é obrigatório.'; errBox.style.display='block'; return; }
   errBox.style.display='none';
+  const restore = setBusy(btn, 'Salvando...');
   const nome = document.getElementById('acaoNome').value.trim() || 'anônimo';
   setMeuNome(nome);
   const body = {
@@ -1460,24 +1490,29 @@ function submitAcao(){
     comentario: document.getElementById('acaoComentario').value
   };
   apiCall('apiAddAcao', body).then(()=>apiCall('apiAcoes')).then(acoes=>{
+    restore();
     STATE.acoes = acoes;
     ['acaoAtual','acaoMeta','acaoDescricao','acaoComentario'].forEach(id=>document.getElementById(id).value='');
     renderHistory(currentArea);
-  }).catch(err=>{ errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
+  }).catch(err=>{ restore(); errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
 }
 function submitComentario(){
+  const btn = document.querySelector('#formComentario .sp-submit');
+  if (isBusy(btn)) return;
   const texto = document.getElementById('comentTexto').value.trim();
   const errBox = document.getElementById('comentError');
   if (!texto){ errBox.textContent = 'Escreva um comentário antes de salvar.'; errBox.style.display='block'; return; }
   errBox.style.display='none';
+  const restore = setBusy(btn, 'Salvando...');
   const nome = document.getElementById('comentNome').value.trim() || 'anônimo';
   setMeuNome(nome);
   apiCall('apiAddComentario', { area: currentArea, slide: currentSlideForPanel, nome, turno: currentTurno, comentario: texto })
     .then(()=>apiCall('apiComentarios')).then(comentarios=>{
+      restore();
       STATE.comentarios = comentarios;
       document.getElementById('comentTexto').value = '';
       renderHistory(currentArea);
-    }).catch(err=>{ errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
+    }).catch(err=>{ restore(); errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
 }
 
 /* ====================================================================
