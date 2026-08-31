@@ -1208,13 +1208,15 @@ document.addEventListener('click', function(e){
 // se o turno dele bate com o selecionado na capa — slides fixos são
 // sempre "Todos" então nunca são afetados por essa regra.
 function matchesTurno(slideTurno){
-  return currentTurno === 'Todos' || !slideTurno || slideTurno === 'Todos' || slideTurno === currentTurno;
+  const st = String(slideTurno||'').trim();
+  return currentTurno === 'Todos' || !st || st === 'Todos' || st === currentTurno;
 }
+function sameArea(a, b){ return String(a||'').trim() === String(b||'').trim(); }
 function visibleSlidesForArea(area){
-  return STATE.slides.filter(s => s.area === area && s.visibilidade !== 'oculto' && matchesTurno(s.turno)).sort((a,b)=>a.ordem-b.ordem);
+  return STATE.slides.filter(s => sameArea(s.area, area) && s.visibilidade !== 'oculto' && matchesTurno(s.turno)).sort((a,b)=>a.ordem-b.ordem);
 }
 function allSlidesForArea(area){
-  return STATE.slides.filter(s => s.area === area).sort((a,b)=>a.ordem-b.ordem);
+  return STATE.slides.filter(s => sameArea(s.area, area)).sort((a,b)=>a.ordem-b.ordem);
 }
 function flatFlow(){
   let flat = [];
@@ -1243,19 +1245,27 @@ function wireNavigation(){
   renderMovableSlides();
   const flat = flatFlow();
   flat.forEach((entry, i)=>{
-    const el = document.querySelector('[data-slide="'+entry.id+'"]');
-    if (!el) return;
-    const bb = el.querySelector('.bottombar');
-    if (!bb) return;
-    const arrows = bb.querySelectorAll('.nav-arrow');
-    const prevId = i>0 ? flat[i-1].id : 'areas';
-    const nextId = i<flat.length-1 ? flat[i+1].id : 'fim';
-    if (arrows[0]) arrows[0].onclick = ()=>goTo(prevId);
-    if (arrows[arrows.length-1]) arrows[arrows.length-1].onclick = ()=>goTo(nextId);
-    const areaSlides = visibleSlidesForArea(entry.area);
-    const idxInArea = areaSlides.findIndex(s=>s.id===entry.id);
-    const prog = bb.querySelector('.progress');
-    if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'" data-action="goto" data-a="'+s.id+'" title="'+escapeAttr(s.titulo||'')+'"></span>').join('');
+    try {
+      const el = document.querySelector('[data-slide="'+entry.id+'"]');
+      if (!el) return;
+      const bb = el.querySelector('.bottombar');
+      if (!bb) return;
+      const arrows = bb.querySelectorAll('.nav-arrow');
+      const prevId = i>0 ? flat[i-1].id : 'areas';
+      const nextId = i<flat.length-1 ? flat[i+1].id : 'fim';
+      if (arrows[0]) arrows[0].onclick = ()=>goTo(prevId);
+      if (arrows[arrows.length-1]) arrows[arrows.length-1].onclick = ()=>goTo(nextId);
+      const areaSlides = visibleSlidesForArea(entry.area);
+      const idxInArea = areaSlides.findIndex(s=>s.id===entry.id);
+      const prog = bb.querySelector('.progress');
+      if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'" data-action="goto" data-a="'+s.id+'" title="'+escapeAttr(s.titulo||'')+'"></span>').join('');
+    } catch(err){
+      // um slide com problema NÃO pode travar a montagem dos outros — antes,
+      // um erro aqui no meio da lista deixava TODOS os slides seguintes
+      // (inclusive áreas inteiras, tipo Qualidade, que é a última) sem
+      // navegação nenhuma, mesmo sem ter nada a ver com o slide quebrado.
+      console.error('Falha isolada ao ligar navegação do slide ' + entry.id + ':', err);
+    }
   });
 }
 
@@ -1265,35 +1275,42 @@ function wireNavigation(){
 function renderMovableSlides(){
   document.querySelectorAll('.slide.movable-injected').forEach(el=>el.remove());
   STATE.slides.filter(s=>!s.fixo).forEach(s=>{
-    const el = document.createElement('section');
-    el.className = 'slide movable-injected';
-    el.dataset.slide = s.id;
-    el.dataset.area = s.area;
-    const areaColorVar = { Safety:'--safety', Flow:'--flow', Abs:'--abs', Prod:'--prod', Qualidade:'--qualidade' }[s.area] || '--text';
-    el.innerHTML = `
-      <div class="topbar">
-        <div class="crumbs">
-          <span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(${areaColorVar});"></span>${s.area}</span>
-          <b>${escapeHtml(s.titulo||'Slide')}</b>
-          <span class="movable-badge" style="display:inline-block;">móvel</span>
+    try {
+      const el = document.createElement('section');
+      el.className = 'slide movable-injected';
+      el.dataset.slide = s.id;
+      el.dataset.area = s.area;
+      const areaColorVar = { Safety:'--safety', Flow:'--flow', Abs:'--abs', Prod:'--prod', Qualidade:'--qualidade' }[s.area] || '--text';
+      el.innerHTML = `
+        <div class="topbar">
+          <div class="crumbs">
+            <span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(${areaColorVar});"></span>${s.area}</span>
+            <b>${escapeHtml(s.titulo||'Slide')}</b>
+            <span class="movable-badge" style="display:inline-block;">móvel</span>
+          </div>
+          <div class="top-actions"></div>
         </div>
-        <div class="top-actions"></div>
-      </div>
-      <div class="body">${renderSlideContentHTML(s)}</div>
-      <div class="bottombar">
-        <div class="nav-arrow">←</div>
-        <div class="progress"></div>
-        <div class="nav-arrow">→</div>
-      </div>`;
-    document.getElementById('deck').appendChild(el);
-    const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
-    if (isAdmin) el.querySelector('.top-actions').innerHTML = buildTopActionsHTML(s.area, s.id);
-    // marca d'água + tela de bloqueio (mesmo tratamento dos slides fixos)
-    const wm = document.createElement('div'); wm.className='wm';
-    wm.innerHTML = `<img src="${LOGO_DATA_URI}" alt="">`;
-    el.appendChild(wm);
-    const ls = document.createElement('div'); ls.className='lock-screen';
-    el.appendChild(ls);
+        <div class="body">${renderSlideContentHTML(s)}</div>
+        <div class="bottombar">
+          <div class="nav-arrow">←</div>
+          <div class="progress"></div>
+          <div class="nav-arrow">→</div>
+        </div>`;
+      document.getElementById('deck').appendChild(el);
+      const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+      if (isAdmin) el.querySelector('.top-actions').innerHTML = buildTopActionsHTML(s.area, s.id);
+      // marca d'água + tela de bloqueio (mesmo tratamento dos slides fixos)
+      const wm = document.createElement('div'); wm.className='wm';
+      wm.innerHTML = `<img src="${LOGO_DATA_URI}" alt="">`;
+      el.appendChild(wm);
+      const ls = document.createElement('div'); ls.className='lock-screen';
+      el.appendChild(ls);
+    } catch(err){
+      // um slide móvel com problema (ex.: conteúdo malformado) NÃO pode
+      // impedir os outros de serem criados — antes, um erro aqui parava o
+      // forEach inteiro no meio, e nenhum slide depois dele era criado.
+      console.error('Falha isolada ao criar o slide móvel ' + (s && s.id) + ':', err);
+    }
   });
 }
 function renderSlideContentHTML(s){
