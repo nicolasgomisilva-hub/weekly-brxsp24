@@ -1736,9 +1736,9 @@ const INDICATOR_CONFIG = {
   'Volume Real': { mode:'sum', scale:1 },
   'Volume Real V3': { mode:'sum', scale:1 },
   'Volume Real V4': { mode:'sum', scale:1 },
-  'Plano vs Volume Real': { mode:'sum', scale:1 },
-  'Plano vs Volume Real V3': { mode:'sum', scale:1 },
-  'Plano vs Volume Real V4': { mode:'sum', scale:1 },
+  'Plano vs Volume Real': { mode:'avg', scale:1 },
+  'Plano vs Volume Real V3': { mode:'avg', scale:1 },
+  'Plano vs Volume Real V4': { mode:'avg', scale:1 },
   'Ociosidade': { mode:'avg', scale:100 },
   'Abs Geral': { mode:'avg', scale:100 },
   'DOT': { mode:'avg', scale:1 },
@@ -1814,13 +1814,21 @@ const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 // "Cohort": as últimas 3 semanas fechadas inteiras + a semana mais recente
 // quebrada dia a dia (Dom→Sáb) — em vez de 4 barras semanais, vira
 // [W32, W33, W34, Dom, Seg, Ter, Qua, Qui, Sex, Sáb].
+// Monta "YYYY-MM-DD" a partir do calendário LOCAL do navegador — nunca usa
+// toISOString() aqui, porque isso converte pra UTC e pode voltar/adiantar
+// um dia dependendo do fuso, desalinhando com a data que vem da planilha.
+function toLocalISO(d){
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
 function seriesForCohort(indicador, area, turno){
   const cfg = INDICATOR_CONFIG[indicador] || { mode:'sum', scale:1 };
   const row = pickIndicator(indicador, area, turno);
-  if (!row) return { labels:[], values:[], weekRangeLabel:'' };
+  if (!row) return { labels:[], values:[], weekRangeLabel:'', weeklyRaw:[] };
   const src = cfg.mode==='sum' ? row.weekly_sum : row.weekly_avg;
-  const semanas = lastWeeks(src, 4);
-  const priorWeeks = semanas.slice(0, -1);
+  const semanas = lastWeeks(src, 4); // ex: [W32,W33,W34,W35]
+  const priorWeeks = semanas.slice(0, -1); // [W32,W33,W34]
+  const lastWeek = semanas[semanas.length-1]; // W35 (a mais recente completa)
   const labels = [], values = [];
   priorWeeks.forEach(w=>{
     labels.push(w);
@@ -1829,16 +1837,21 @@ function seriesForCohort(indicador, area, turno){
   const { start } = getLastCompleteWeek(new Date());
   for (let i=0;i<7;i++){
     const d = new Date(start); d.setDate(start.getDate()+i);
-    const iso = d.toISOString().slice(0,10);
+    const iso = toLocalISO(d);
     const v = (row.daily||{})[iso];
     labels.push(DIAS_SEMANA[i]);
-    // valores diários de indicadores tipo "%" (avg) não devem ser somados,
-    // já vêm prontos por dia; pra "sum" (volume) o dado diário já é o
-    // valor do próprio dia — em ambos os casos é só aplicar a escala.
     values.push(v!==undefined ? Math.round(v*cfg.scale*10)/10 : null);
   }
+  // coluna extra no final: total/média da semana mais recente (ex. W35),
+  // pra dar visão fechada dela junto com o detalhe diário
+  labels.push(lastWeek || 'W?');
+  values.push(lastWeek && src[lastWeek]!==undefined ? Math.round(src[lastWeek]*cfg.scale*10)/10 : null);
+
   const weekRangeLabel = semanas.length ? (semanas[0] + '–' + semanas[semanas.length-1]) : '';
-  return { labels, values, weekRangeLabel };
+  // valores brutos das 4 semanas (sem arredondar), só pra calcular variação
+  // semana-a-semana (WtW) — não usados pro desenho das barras em si
+  const weeklyRaw = semanas.map(w => src[w]!==undefined ? src[w]*cfg.scale : null);
+  return { labels, values, weekRangeLabel, weeklyRaw };
 }
 
 // turno "efetivo" de um gráfico: segue o turno global, a menos que esse
@@ -1871,19 +1884,34 @@ const dataLabelsPlugin = {
       const meta = chart.getDatasetMeta(i);
       if (meta.hidden || meta.type !== 'bar') return;
       ctx.save();
-      ctx.font = "600 10px 'Inter',sans-serif";
-      ctx.fillStyle = '#111111';
       meta.data.forEach((el, idx) => {
         const value = dataset.data[idx];
         if (value === null || value === undefined) return;
         const pct = dataset._pctValues ? dataset._pctValues[idx] : undefined;
-        const txt = formatCompact(value) + (pct !== undefined && pct !== null ? ' (' + Math.round(pct) + '%)' : '');
+        const wow = dataset._wow ? dataset._wow[idx] : undefined;
         if (isHorizontal){
+          ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-          ctx.fillText(txt, el.x + 5, el.y);
+          ctx.fillText(formatCompact(value), el.x + 5, el.y);
+        } else if (pct !== undefined && pct !== null){
+          // duas linhas: % (com seta WtW quando disponível) em cima, número absoluto embaixo
+          ctx.textAlign = 'center';
+          let pctTxt = Math.round(pct) + '%';
+          ctx.font = "700 11px 'Inter',sans-serif";
+          if (wow !== undefined && wow !== null){
+            ctx.fillStyle = wow >= 0 ? '#1F8A4C' : '#C22323';
+            pctTxt = (wow >= 0 ? '▲ ' : '▼ ') + pctTxt;
+          } else {
+            ctx.fillStyle = '#111111';
+          }
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(pctTxt, el.x, el.y - 16);
+          ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#63625C';
+          ctx.fillText(formatCompact(value), el.x, el.y - 3);
         } else {
+          ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-          ctx.fillText(txt, el.x, el.y - 3);
+          ctx.fillText(formatCompact(value), el.x, el.y - 3);
         }
       });
       ctx.restore();
@@ -1986,43 +2014,67 @@ function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
 }
 
 function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
-  // Volume (barra, número absoluto) + rótulo combinado "43.5k (79%)" usando
-  // o % de "Plano vs Volume Real" na MESMA barra — sem gráfico separado.
+  // Volume real (barra) com rótulo de duas linhas: % de plano respeitado
+  // (com seta de tendência semana-a-semana) em cima, número absoluto embaixo.
   const real = seriesForCohort(indicadorReal, 'Flow', 'Geral');
   const plano = seriesForCohort(indicadorPlano, 'Flow', 'Geral');
+  const n = real.labels.length;
+  // seta WtW só nas colunas de SEMANA (W32,W33,W34 e a coluna extra do
+  // final) — nos dias (Dom..Sáb) fica sem seta, comparar dia-a-dia não faz
+  // tanto sentido aqui.
+  const wow = new Array(n).fill(null);
+  const raw = plano.weeklyRaw; // [W32,W33,W34,W35] brutos
+  if (raw[0]!=null && raw[1]!=null) wow[1] = raw[1]-raw[0];   // W33 vs W32
+  if (raw[1]!=null && raw[2]!=null) wow[2] = raw[2]-raw[1];   // W34 vs W33
+  if (raw[2]!=null && raw[3]!=null) wow[n-1] = raw[3]-raw[2]; // coluna final (W35) vs W34
+  const colors = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : '#111111');
   mkChart(canvasId, { type:'bar',
     data:{ labels: real.labels, datasets:[
-      { label:'Volume real', data: real.values, backgroundColor:'#111111', borderRadius:6, maxBarThickness:36,
-        _pctValues: plano.values } // guardado aqui só pra o plugin de rótulo ler
+      { label:'Volume real', data: real.values, backgroundColor: colors, borderRadius:6, maxBarThickness:36,
+        _pctValues: plano.values, _wow: wow }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [real.weekRangeLabel]);
 }
 
-// Volume Total — só Geral, formato "3 semanas fechadas + 7 dias da última"
+// Volume Total — só Geral, formato "3 semanas fechadas + 7 dias + coluna
+// extra com o total da semana mais recente em destaque (amarelo)
 function renderVolumeCohort(canvasId, indicador, weekRangeId){
   const s = seriesForCohort(indicador, 'Flow', 'Geral');
+  const colors = s.labels.map((_,i)=> i===s.labels.length-1 ? '#FFE600' : '#111111');
   mkChart(canvasId, { type:'bar',
-    data:{ labels: s.labels, datasets:[{ label:'Volume', data:s.values, backgroundColor:'#111111', borderRadius:6, maxBarThickness:36 }] },
+    data:{ labels: s.labels, datasets:[{ label:'Volume', data:s.values, backgroundColor:colors, borderRadius:6, maxBarThickness:36 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [s.weekRangeLabel]);
 }
 
-// ABS Geral — área preenchida (não linha), só Geral, cohort semana+dias,
-// com linha tracejada de meta em 12%.
+// ABS Geral — TODOS os turnos (cores combinadas), estilo área (fill leve,
+// não uma "mancha" cinza pesada), cohort semana+dias, meta 12% tracejada
+// mais próxima visualmente (eixo ajustado pro intervalo real dos dados).
 function renderAbsCohort(canvasId, indicador, weekRangeId){
-  const s = seriesForCohort(indicador, 'Abs', 'Geral');
+  const geral = seriesForCohort(indicador, 'Abs', 'Geral');
+  const t1 = seriesForCohort(indicador, 'Abs', 'T1');
+  const t2 = seriesForCohort(indicador, 'Abs', 'T2');
+  const t3 = seriesForCohort(indicador, 'Abs', 'T3');
+  const META = 12;
+  const serieDataset = (s, cor) => ({
+    data: s.values, borderColor: cor, backgroundColor: cor + '22', fill:true,
+    tension:.3, pointRadius:2.5, borderWidth:2
+  });
   mkChart(canvasId, { type:'line',
-    data:{ labels: s.labels, datasets:[
-      { label:'ABS Geral', data:s.values, borderColor:'#111111', backgroundColor:'#1111112A', fill:true, tension:.3, pointRadius:3, borderWidth:2 },
-      { label:'Meta 12%', data:s.values.map(()=>12), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false }
+    data:{ labels: geral.labels, datasets:[
+      Object.assign({ label:'Geral' }, serieDataset(geral, TURNO_COLORS.Geral)),
+      Object.assign({ label:'T1' }, serieDataset(t1, TURNO_COLORS.T1)),
+      Object.assign({ label:'T2' }, serieDataset(t2, TURNO_COLORS.T2)),
+      Object.assign({ label:'T3' }, serieDataset(t3, TURNO_COLORS.T3)),
+      { label:'Meta 12%', data: geral.values.map(()=>META), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>v+'%' }) }) } }
   });
-  setWeekRange(weekRangeId, [s.weekRangeLabel]);
+  setWeekRange(weekRangeId, [geral.weekRangeLabel]);
 }
 
 function renderAbsPareto(canvasId, fonte, labelField, color){
