@@ -576,11 +576,21 @@ body{
     </div>
     <div class="body">
       <h2 class="slide-title editable-title">Volume Total</h2>
-      <p class="slide-sub">Fonte: aba Scorecard · pacotes expedidos, últimas 4 semanas (dado real)</p>
+      <p class="slide-sub">Fonte: aba Scorecard · pacotes expedidos, últimas semanas (dado real) · 3 versões de cálculo lado a lado</p>
       <div class="grid-main-side">
-        <div class="card">
-          <div class="card-head"><h3>Pacotes expedidos por turno</h3><span class="card-headnote" id="weekRangeFlow1"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartVolume">Geral</button></div>
-          <div class="card-body"><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
+        <div class="stack" style="gap:10px;">
+          <div class="card" style="flex:1;">
+            <div class="card-head"><h3>Volume Real</h3><span class="card-headnote" id="weekRangeFlow1"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartVolume">Geral</button></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="card-head"><h3>Volume Real V3</h3><span class="card-headnote" id="weekRangeFlow1v3"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartVolumeV3">Geral</button></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartVolumeV3"></canvas></div></div>
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="card-head"><h3>Volume Real V4</h3><span class="card-headnote" id="weekRangeFlow1v4"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartVolumeV4">Geral</button></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartVolumeV4"></canvas></div></div>
+          </div>
         </div>
         <div class="card">
           <div class="card-head"><h3>Dificuldades da semana</h3></div>
@@ -595,23 +605,27 @@ body{
     </div>
   </section>
 
-  <!-- ============ FLOW 2 — Plano vs Real + Ociosidade ============ -->
+  <!-- ============ FLOW 2 — Plano vs Real (3 versões) ============ -->
   <section class="slide" data-slide="flow-2" data-area="Flow">
     <div class="topbar">
-      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--flow);"></span>Flow</span><b>Plano vs. Real · Ociosidade</b></div>
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--flow);"></span>Flow</span><b>Plano vs. Real</b></div>
       <div class="top-actions" id="topActions5"></div>
     </div>
     <div class="body">
-      <h2 class="slide-title editable-title">Plano vs. Real · Ociosidade</h2>
-      <p class="slide-sub">Fonte: aba Scorecard · dado real</p>
-      <div class="stack">
+      <h2 class="slide-title editable-title">Plano vs. Real</h2>
+      <p class="slide-sub">Fonte: aba Scorecard · dado real · 3 versões de cálculo lado a lado</p>
+      <div class="stack" style="gap:10px;">
         <div class="card" style="flex:1;">
-          <div class="card-head"><h3>Plano vs. Volume Real</h3><span class="card-headnote" id="weekRangeFlow2a"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartPlano">Geral</button></div>
+          <div class="card-head"><h3>Plano vs. Real</h3><span class="card-headnote" id="weekRangeFlow2a"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartPlano">Geral</button></div>
           <div class="card-body"><div class="chart-wrap"><canvas id="chartPlano"></canvas></div></div>
         </div>
         <div class="card" style="flex:1;">
-          <div class="card-head"><h3>Ociosidade</h3><span class="card-headnote" id="weekRangeFlow2b"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartOciosidade">Geral</button></div>
-          <div class="card-body"><div class="chart-wrap"><canvas id="chartOciosidade"></canvas></div></div>
+          <div class="card-head"><h3>Plano vs. Real V3</h3><span class="card-headnote" id="weekRangeFlow2v3"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartPlanoV3">Geral</button></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartPlanoV3"></canvas></div></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-head"><h3>Plano vs. Real V4</h3><span class="card-headnote" id="weekRangeFlow2v4"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartPlanoV4">Geral</button></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartPlanoV4"></canvas></div></div>
         </div>
       </div>
     </div>
@@ -770,11 +784,9 @@ body{
           <input id="sfTitulo" placeholder="Título do slide" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;">
           <div class="ms-area-label" style="margin-top:6px;">Tipo de conteúdo</div>
           <select id="sfTipo" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;">
-            <option value="quadro">Quadro em branco (texto)</option>
+            <option value="quadro">Slide em branco (texto, imagem, comentário)</option>
             <option value="url">Link URL (navegação incorporada)</option>
             <option value="ppt">Link de PPT (Google Apresentações público)</option>
-            <option value="upload">Upload de imagem (URL da imagem)</option>
-            <option value="comentario">Caixa de comentário</option>
           </select>
           <div id="sfDynamicFields"></div>
         </div>
@@ -861,7 +873,9 @@ document.addEventListener('click', function(e){
       break;
     }
     case 'addBloco': {
-      sfBlocos.push(a === 'imagem' ? { tipo:'imagem', url:'', borda:false } : { tipo:'texto', texto:'', cor:'#111111', borda:false });
+      if (a === 'imagem') sfBlocos.push({ tipo:'imagem', url:'', borda:false, tamanho:'medio' });
+      else if (a === 'comentario') sfBlocos.push({ tipo:'comentario', texto:'', cor:'var(--panel-2)', tamanho:'medio' });
+      else sfBlocos.push({ tipo:'texto', texto:'', cor:'#111111', borda:false, tamanho:'medio' });
       renderBlocosList();
       break;
     }
@@ -1247,7 +1261,10 @@ function renderSlideContentHTML(s){
   const c = s.conteudo || {};
   // nunca deixa um slide móvel parecer "em branco" sem explicação — se
   // não tem conteúdo nenhum, mostra um aviso claro em vez de nada
-  const vazio = `<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:13px;text-align:center;padding:30px;">Este slide ainda não tem conteúdo definido.<br>Abre o menu ⋮ → "Editar / mover / excluir slides" → ✎ pra preencher.</div>`;
+  const vazio = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-faint);font-size:13px;text-align:center;padding:30px;">
+    <span>Este slide ainda não tem conteúdo.</span>
+    <button data-action="openSlideForm" data-a="${s.id}" style="background:var(--accent);color:var(--accent-ink);border:none;border-radius:20px;padding:9px 18px;font-weight:700;font-size:12.5px;cursor:pointer;">✎ Adicionar conteúdo</button>
+  </div>`;
   switch(s.tipo){
     case 'url':
       if (!c.url) return vazio;
@@ -1268,13 +1285,22 @@ function renderSlideContentHTML(s){
       return `<div style="flex:1;display:flex;align-items:center;justify-content:center;background:${escapeAttr(c.cor||'var(--panel)')};border:1px solid var(--border);border-radius:14px;padding:30px;">
         <p style="font-size:18px;font-family:'Sora';font-weight:600;text-align:center;max-width:70%;">${escapeHtml(c.texto||'')}</p></div>`;
     default: { // 'quadro'
-      const blocos = c.blocos || (c.texto ? [{ tipo:'texto', texto:c.texto, cor:c.cor||'#111111' }] : []);
+      const blocos = c.blocos || (c.texto ? [{ tipo:'texto', texto:c.texto, cor:c.cor||'#111111', tamanho:'medio' }] : []);
       if (!blocos.length) return vazio;
+      const FONTE = { pequeno:'13px', medio:'16px', grande:'22px' };
+      const LARGURA_IMG = { pequeno:'40%', medio:'70%', grande:'100%' };
+      const FONTE_COMENT = { pequeno:'16px', medio:'20px', grande:'26px' };
       return `<div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:22px;">
-        ${blocos.map(b => b.tipo==='imagem'
-          ? `<img src="${escapeAttr(b.url||'')}" style="max-width:100%;border-radius:8px;${b.borda?'border:3px solid #111111;':''}">`
-          : `<div style="font-size:16px;line-height:1.6;white-space:pre-wrap;color:${escapeAttr(b.cor||'#111111')};${b.borda?'border:2px solid '+escapeAttr(b.cor||'#111111')+';border-radius:8px;padding:14px;':''}">${escapeHtml(b.texto||'')}</div>`
-        ).join('')}
+        ${blocos.map(b => {
+          if (b.tipo === 'imagem'){
+            return `<img src="${escapeAttr(b.url||'')}" style="max-width:${LARGURA_IMG[b.tamanho]||'70%'};align-self:flex-start;border-radius:8px;${b.borda?'border:3px solid #111111;':''}">`;
+          }
+          if (b.tipo === 'comentario'){
+            return `<div style="display:flex;align-items:center;justify-content:center;background:${escapeAttr(b.cor||'var(--panel-2)')};border:1px solid var(--border);border-radius:14px;padding:26px;">
+              <p style="font-size:${FONTE_COMENT[b.tamanho]||'20px'};font-family:'Sora';font-weight:600;text-align:center;max-width:80%;margin:0;">${escapeHtml(b.texto||'')}</p></div>`;
+          }
+          return `<div style="font-size:${FONTE[b.tamanho]||'16px'};line-height:1.6;white-space:pre-wrap;color:${escapeAttr(b.cor||'#111111')};${b.borda?'border:2px solid '+escapeAttr(b.cor||'#111111')+';border-radius:8px;padding:14px;':''}">${escapeHtml(b.texto||'')}</div>`;
+        }).join('')}
       </div>`;
     }
   }
@@ -1375,6 +1401,7 @@ let sfBlocos = []; // blocos do "quadro em branco" sendo editado agora (array de
 function openSlideForm(id){
   editingSlideId = id;
   const s = id ? STATE.slides.find(x=>x.id===id) : null;
+  if (s) currentArea = s.area; // abrir direto do slide (sem passar pelo gerenciador) também acerta a área certa
   document.getElementById('slideFormTitle').textContent = s ? 'Editar slide' : 'Novo slide';
   document.getElementById('sfArea').value = currentArea;
   document.getElementById('sfTitulo').value = s ? s.titulo : '';
@@ -1382,7 +1409,7 @@ function openSlideForm(id){
   const conteudo = s ? s.conteudo : {};
   // migra formato antigo (texto único) pra um bloco, se for o caso
   sfBlocos = conteudo.blocos ? conteudo.blocos.map(b=>Object.assign({},b))
-    : (conteudo.texto ? [{ tipo:'texto', texto:conteudo.texto, cor:conteudo.cor||'#111111', borda:false }] : []);
+    : (conteudo.texto ? [{ tipo:'texto', texto:conteudo.texto, cor:conteudo.cor||'#111111', borda:false, tamanho:'medio' }] : []);
   renderSlideFormFields(conteudo);
   document.getElementById('slideFormOverlay').classList.add('open');
 }
@@ -1394,39 +1421,49 @@ function renderSlideFormFields(conteudo){
   const holder = document.getElementById('sfDynamicFields');
   const fieldStyle = "background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;width:100%;margin-top:6px;";
   if (tipo==='quadro'){
-    holder.innerHTML = `
-      <div class="ms-area-label" style="margin-top:6px;">Conteúdo do quadro</div>
-      <div id="sfBlocosList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;"></div>
-      <div style="display:flex;gap:6px;margin-top:8px;">
-        <button type="button" class="btn-ghost" data-action="addBloco" data-a="texto" style="flex:1;">+ Texto</button>
-        <button type="button" class="btn-ghost" data-action="addBloco" data-a="imagem" style="flex:1;">+ Imagem</button>
-      </div>
-      <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">Cada bloco aparece um abaixo do outro no slide, na ordem que você adicionar aqui.</div>`;
-    renderBlocosList();
+    if (!editingSlideId){
+      // CRIAÇÃO: só cria o slide vazio — nenhuma ferramenta aparece
+      // ainda. As ferramentas (texto/imagem/comentário) só aparecem
+      // depois, reabrindo esse mesmo slide já criado pra editar.
+      holder.innerHTML = `<div style="font-size:11.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;">
+        Um slide em branco vai ser criado agora. Depois de criado, abra o slide e clique no lápis (✎) dele pra adicionar textos, imagens e comentários.
+      </div>`;
+    } else {
+      // EDIÇÃO: aqui sim entram as ferramentas de verdade.
+      holder.innerHTML = `
+        <div class="ms-area-label" style="margin-top:6px;">Conteúdo do slide</div>
+        <div id="sfBlocosList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;"></div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button type="button" class="btn-ghost" data-action="addBloco" data-a="texto" style="flex:1;">+ Texto</button>
+          <button type="button" class="btn-ghost" data-action="addBloco" data-a="imagem" style="flex:1;">+ Imagem</button>
+          <button type="button" class="btn-ghost" data-action="addBloco" data-a="comentario" style="flex:1;">+ Comentário</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">Cada bloco aparece um abaixo do outro no slide, na ordem que você adicionar aqui. Dá pra ajustar tamanho, cor e borda de cada um.</div>`;
+      renderBlocosList();
+    }
   } else if (tipo==='url'){
     holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL</div><input id="sfUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">`;
   } else if (tipo==='ppt'){
     holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">Link do Google Apresentações (público)</div><input id="sfLink" value="${escapeAttr(conteudo.link||'')}" placeholder="https://docs.google.com/presentation/d/.../edit" style="${fieldStyle}">`;
-  } else if (tipo==='upload'){
-    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL da imagem</div><input id="sfImgUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">
-      <div style="font-size:10.5px;color:var(--text-faint);margin-top:4px;">Cole o link de uma imagem já hospedada (Drive público, CDN interno etc). Upload direto de arquivo é o próximo passo de evolução do app.</div>`;
-  } else if (tipo==='comentario'){
-    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">Texto</div><textarea id="sfComentTexto" rows="3" style="${fieldStyle}">${escapeHtml(conteudo.texto||'')}</textarea>
-      <div class="ms-area-label" style="margin-top:6px;">Cor de fundo</div>
-      <select id="sfComentCor" style="${fieldStyle}">
-        <option value="var(--panel)" ${conteudo.cor==='var(--panel)'?'selected':''}>Neutro</option>
-        <option value="#FFF7CC" ${conteudo.cor==='#FFF7CC'?'selected':''}>Amarelo suave</option>
-        <option value="transparent" ${conteudo.cor==='transparent'?'selected':''}>Transparente</option>
-      </select>`;
+  } else if (tipo==='upload'){ // formato legado — só continua funcionando se editar um slide antigo desse tipo
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL da imagem</div><input id="sfImgUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">`;
+  } else if (tipo==='comentario'){ // formato legado — idem
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">Texto</div><textarea id="sfComentTexto" rows="3" style="${fieldStyle}">${escapeHtml(conteudo.texto||'')}</textarea>`;
   }
 }
 
 const BLOCO_CORES = ['#111111','#1E6FA8','#0E7C6B','#8a7400','#B23A1E','#FFFFFF'];
+const TAMANHO_LABEL = { pequeno:'Pequeno', medio:'Médio', grande:'Grande' };
+function tamanhoSelectHTML(i, atual){
+  return `<select data-bloco-idx="${i}" data-bloco-field="tamanho" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:11px;color:var(--text);">
+    ${Object.keys(TAMANHO_LABEL).map(t=>`<option value="${t}" ${(atual||'medio')===t?'selected':''}>${TAMANHO_LABEL[t]}</option>`).join('')}
+  </select>`;
+}
 function renderBlocosList(){
   const el = document.getElementById('sfBlocosList');
   if (!el) return;
   if (!sfBlocos.length){
-    el.innerHTML = '<div style="font-size:11px;color:var(--text-faint);text-align:center;padding:10px;border:1px dashed var(--border);border-radius:8px;">Nenhum bloco ainda — adiciona texto ou imagem abaixo.</div>';
+    el.innerHTML = '<div style="font-size:11px;color:var(--text-faint);text-align:center;padding:10px;border:1px dashed var(--border);border-radius:8px;">Nenhum bloco ainda — adiciona texto, imagem ou comentário abaixo.</div>';
     return;
   }
   el.innerHTML = sfBlocos.map((b,i)=>{
@@ -1437,7 +1474,27 @@ function renderBlocosList(){
           <span class="del-btn" data-action="removeBloco" data-a="${i}" style="cursor:pointer;">🗑</span>
         </div>
         <input data-bloco-idx="${i}" data-bloco-field="url" value="${escapeAttr(b.url||'')}" placeholder="https://..." style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);">
-        <label style="font-size:10.5px;display:flex;align-items:center;gap:5px;margin-top:7px;color:var(--text-dim);"><input type="checkbox" data-bloco-idx="${i}" data-bloco-field="borda" ${b.borda?'checked':''} style="width:auto;"> Com borda</label>
+        <div style="display:flex;gap:10px;margin-top:7px;align-items:center;">
+          ${tamanhoSelectHTML(i, b.tamanho)}
+          <label style="font-size:10.5px;display:flex;align-items:center;gap:5px;color:var(--text-dim);"><input type="checkbox" data-bloco-idx="${i}" data-bloco-field="borda" ${b.borda?'checked':''} style="width:auto;"> Com borda</label>
+        </div>
+      </div>`;
+    }
+    if (b.tipo === 'comentario'){
+      return `<div style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:10.5px;color:var(--text-faint);">💬 Comentário</span>
+          <span class="del-btn" data-action="removeBloco" data-a="${i}" style="cursor:pointer;">🗑</span>
+        </div>
+        <textarea data-bloco-idx="${i}" data-bloco-field="texto" rows="2" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);font-family:'Inter';">${escapeHtml(b.texto||'')}</textarea>
+        <div style="display:flex;gap:10px;margin-top:7px;align-items:center;">
+          ${tamanhoSelectHTML(i, b.tamanho)}
+          <select data-bloco-idx="${i}" data-bloco-field="cor" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:11px;color:var(--text);">
+            <option value="var(--panel-2)" ${(b.cor||'var(--panel-2)')==='var(--panel-2)'?'selected':''}>Neutro</option>
+            <option value="#FFF7CC" ${b.cor==='#FFF7CC'?'selected':''}>Amarelo suave</option>
+            <option value="transparent" ${b.cor==='transparent'?'selected':''}>Transparente</option>
+          </select>
+        </div>
       </div>`;
     }
     return `<div style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px;">
@@ -1446,7 +1503,8 @@ function renderBlocosList(){
         <span class="del-btn" data-action="removeBloco" data-a="${i}" style="cursor:pointer;">🗑</span>
       </div>
       <textarea data-bloco-idx="${i}" data-bloco-field="texto" rows="2" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);font-family:'Inter';">${escapeHtml(b.texto||'')}</textarea>
-      <div style="display:flex;gap:10px;margin-top:7px;align-items:center;">
+      <div style="display:flex;gap:10px;margin-top:7px;align-items:center;flex-wrap:wrap;">
+        ${tamanhoSelectHTML(i, b.tamanho)}
         <select data-bloco-idx="${i}" data-bloco-field="cor" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:11px;color:var(--text);">
           ${BLOCO_CORES.map(cor=>`<option value="${cor}" ${b.cor===cor?'selected':''}>${cor}</option>`).join('')}
         </select>
@@ -1471,7 +1529,7 @@ function saveSlideForm(){
   const tipo = document.getElementById('sfTipo').value;
   const titulo = document.getElementById('sfTitulo').value || 'Novo slide';
   let conteudo = {};
-  if (tipo==='quadro') conteudo = { blocos: sfBlocos.filter(b => (b.tipo==='texto' && b.texto) || (b.tipo==='imagem' && b.url)) };
+  if (tipo==='quadro') conteudo = { blocos: sfBlocos.filter(b => ((b.tipo==='texto'||b.tipo==='comentario') && b.texto) || (b.tipo==='imagem' && b.url)) };
   else if (tipo==='url') conteudo = { url: document.getElementById('sfUrl').value };
   else if (tipo==='ppt') conteudo = { link: document.getElementById('sfLink').value };
   else if (tipo==='upload') conteudo = { url: document.getElementById('sfImgUrl').value };
@@ -1660,7 +1718,11 @@ const INDICATOR_CONFIG = {
   'Ocorrencias Abertas': { mode:'sum', scale:1 },
   'Desvios em Aberto': { mode:'sum', scale:1 },
   'Volume Real': { mode:'sum', scale:1 },
+  'Volume Real V3': { mode:'sum', scale:1 },
+  'Volume Real V4': { mode:'sum', scale:1 },
   'Plano vs Volume Real': { mode:'sum', scale:1 },
+  'Plano vs Volume Real V3': { mode:'sum', scale:1 },
+  'Plano vs Volume Real V4': { mode:'sum', scale:1 },
   'Ociosidade': { mode:'avg', scale:100 },
   'Abs Geral': { mode:'avg', scale:100 },
   'DOT': { mode:'avg', scale:1 },
@@ -1865,16 +1927,16 @@ function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
   }
 }
 
-function renderPlanoChart(){
-  const eff = effectiveTurno('chartPlano');
+function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
+  const eff = effectiveTurno(canvasId);
   const t = eff === 'Todos' ? 'Geral' : eff;
-  const plano = seriesFor('Plano vs Volume Real','Flow', t);
-  const real = seriesFor('Volume Real','Flow', t);
-  groupedBarChart('chartPlano', plano.weeks, [
+  const plano = seriesFor(indicadorPlano,'Flow', t);
+  const real = seriesFor(indicadorReal,'Flow', t);
+  groupedBarChart(canvasId, plano.weeks, [
     { label:'Plano', data:plano.values, color:'#C9C9C0' },
     { label:'Real', data:real.values, color:'#111111' }
   ]);
-  setWeekRange('weekRangeFlow2a', plano.weeks);
+  setWeekRange(weekRangeId, plano.weeks);
 }
 
 function renderAbsPareto(canvasId, fonte, labelField, color){
@@ -1896,8 +1958,13 @@ function renderAllCharts(){
 
   // ---- Flow ----
   renderComboBarLinha('chartVolume', 'Volume Real', 'Flow', 'weekRangeFlow1');
-  renderPlanoChart();
-  renderMultiLinhaTurno('chartOciosidade', 'Ociosidade', 'Flow', 'weekRangeFlow2b', true);
+  renderComboBarLinha('chartVolumeV3', 'Volume Real V3', 'Flow', 'weekRangeFlow1v3');
+  renderComboBarLinha('chartVolumeV4', 'Volume Real V4', 'Flow', 'weekRangeFlow1v4');
+  renderPlanoChart('chartPlano', 'Plano vs Volume Real', 'Volume Real', 'weekRangeFlow2a');
+  renderPlanoChart('chartPlanoV3', 'Plano vs Volume Real V3', 'Volume Real V3', 'weekRangeFlow2v3');
+  renderPlanoChart('chartPlanoV4', 'Plano vs Volume Real V4', 'Volume Real V4', 'weekRangeFlow2v4');
+  // Ociosidade desconsiderada por enquanto, a pedido — indicador continua
+  // mapeado no INDICATOR_CONFIG, só não é mais renderizado aqui.
 
   // ---- Abs ---- (agora barra Total amarela + linha por turno, igual Safety)
   renderComboBarLinha('chartAbsGeral', 'Abs Geral', 'Abs', 'weekRangeAbs1');
