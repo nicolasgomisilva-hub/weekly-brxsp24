@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly BRXSP24 — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg: #FFFFFF;
+  --panel: #F7F7F4;
+  --panel-2: #EFEFEA;
+  --border: #E3E3DC;
+  --border-soft: #ECECE6;
+  --text: #111111;
+  --text-dim: #63625C;
+  --text-faint: #A0A099;
+  --accent: #FFE600;
+  --accent-ink: #111111;
+  --safety: #B23A1E;
+  --flow: #1E6FA8;
+  --abs: #6E3FC4;
+  --prod: #111111;
+  --qualidade: #0E7C6B;
+  --good: #1F8A4C;
+  --bad: #C22323;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:#EFEFE9;
+  font-family:'Inter',sans-serif;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  overflow:hidden;
+}
+.stage-wrap{
+  width:100vw; height:100vh;
+  display:flex; align-items:center; justify-content:center;
+}
+.deck{
+  position:relative;
+  width:min(96vw, 177.7vh);
+  height:min(54vw, 100vh);
+  aspect-ratio:16/9;
+  background:var(--bg);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.18), 0 0 0 1px #00000012;
+}
+.slide{
+  position:absolute; inset:0;
+  display:none;
+  flex-direction:column;
+  padding:0;
+}
+.slide.active{display:flex;}
+
+/* ---------- top chrome ---------- */
+.topbar{
+  height:56px; min-height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px;
+  border-bottom:1px solid var(--border-soft);
+  flex-shrink:0;
+}
+.crumbs{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text-dim);}
+.crumbs b{color:var(--text); font-weight:600;}
+.area-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:600;
+  letter-spacing:.2px;
+}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.top-actions{display:flex; align-items:center; gap:8px;}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel); border:1px solid var(--border);
+  color:var(--text-dim); cursor:pointer; position:relative;
+  transition:.15s;
+}
+.icon-btn:hover{background:var(--panel-2); color:var(--text); border-color:#c9c9c0;}
+.icon-btn svg{width:17px;height:17px;}
+.turno-badge{
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-dim);
+  border:1px solid var(--border); padding:5px 10px; border-radius:8px; letter-spacing:.5px;
+}
+
+/* ---------- dropdown menus ---------- */
+.menu{
+  position:absolute; top:46px; right:0; min-width:220px;
+  background:var(--panel-2); border:1px solid var(--border);
+  border-radius:12px; padding:6px; display:none; z-index:50;
+  box-shadow:0 20px 40px -10px rgba(0,0,0,.6);
+}
+.menu.open{display:block;}
+.menu button{
+  width:100%; text-align:left; background:none; border:none; color:var(--text);
+  padding:10px 12px; border-radius:8px; font-size:13.5px; font-family:'Inter';
+  display:flex; align-items:center; gap:10px; cursor:pointer;
+}
+.menu button:hover{background:#EFEFEA;}
+.menu button svg{width:15px;height:15px;color:var(--text-dim); flex-shrink:0;}
+.menu hr{border:none;border-top:1px solid var(--border); margin:6px 4px;}
+
+/* ---------- body / content ---------- */
+.body{flex:1; padding:26px 32px 20px; overflow:hidden; display:flex; flex-direction:column; min-height:0;}
+.slide-title{
+  font-family:'Sora',sans-serif; font-weight:800; font-size:26px; letter-spacing:-.3px;
+  margin:0 0 4px;
+}
+.slide-sub{font-size:12.5px; color:var(--text-dim); margin:0 0 18px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px; flex:1; min-height:0;}
+.grid-main-side{display:grid; grid-template-columns:1fr 280px; gap:18px; flex:1; min-height:0;}
+.stack{display:flex; flex-direction:column; gap:16px; flex:1; min-height:0;}
+
+.card{
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 18px; display:flex; flex-direction:column; min-height:0;
+}
+.card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+.card-head h3{margin:0; font-size:14px; font-weight:700; font-family:'Sora';}
+.card-headnote{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono';}
+.card-body{flex:1; display:flex; gap:14px; min-height:0;}
+.chart-wrap{flex:1; position:relative; min-width:0;}
+.insight{
+  width:170px; flex-shrink:0; font-size:11.8px; line-height:1.5; color:var(--text-dim);
+  border-left:1px solid var(--border); padding-left:14px;
+}
+.insight b{color:var(--text); font-weight:600;}
+.toggle-net{
+  width:26px;height:26px;border-radius:7px; background:var(--panel-2); border:1px solid var(--border);
+  color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.toggle-net.on{color:#8a7400; background:#FFF7CC; border-color:#E6D34D;}
+.offender-btn{
+  margin-top:10px; align-self:flex-start;
+  font-size:11.5px; font-weight:600; color:var(--accent-ink); background:var(--accent);
+  border:none; padding:7px 13px; border-radius:20px; cursor:pointer;
+  display:flex; align-items:center; gap:6px;
+}
+
+/* Pareto slides */
+.pareto-wrap{flex:1; display:flex; flex-direction:column; min-height:0;}
+.fict-tag{
+  font-size:10px; font-family:'IBM Plex Mono'; color:#8a6d00; background:#FFF7CC; border:1px solid #E6D34D;
+  padding:3px 8px; border-radius:6px; letter-spacing:.3px;
+}
+
+/* Área nav slide */
+.area-flow{flex:1; display:flex; align-items:center; justify-content:center; gap:0;}
+.area-node{
+  position:relative; padding:26px 34px; border-radius:16px; cursor:pointer;
+  border:1px solid var(--border); background:var(--panel);
+  text-align:center; transition:.18s; min-width:150px;
+}
+.area-node:hover{background:var(--accent); border-color:var(--accent); transform:translateY(-3px);}
+.area-node:hover .area-node-title{color:var(--accent-ink);}
+.area-node:hover .area-node-eyebrow, .area-node:hover .area-node-status{color:#5a4e00;}
+.area-node-eyebrow{font-size:10px; font-family:'IBM Plex Mono'; color:var(--text-faint); letter-spacing:1px;}
+.area-node-title{font-family:'Sora'; font-weight:800; font-size:19px; margin-top:6px;}
+.area-node-status{font-size:10.5px; color:var(--text-faint); margin-top:6px;}
+.area-arrow{color:var(--text-faint); font-size:22px; margin:0 6px;}
+.area-node.pending{opacity:.45; cursor:default;}
+.area-node.pending:hover{transform:none; border-color:var(--border); background:var(--panel);}
+.area-node.pending:hover .area-node-title{color:var(--text);}
+
+/* Capa — identidade visual Meli (amarelo cheio + formas + tipografia bold) */
+.cover-slide{ background:var(--accent); }
+.cover-topbar{ border-bottom-color:rgba(0,0,0,.08); }
+.cover-topbar .crumbs{ color:#111; }
+.cover-badge{ border-color:rgba(0,0,0,.15); color:#111; background:rgba(255,255,255,.35); }
+.cover-body{ position:relative; flex-direction:row; align-items:center; overflow:hidden; padding:0 60px; }
+.cover-shapes{ position:absolute; inset:0; z-index:0; pointer-events:none; }
+.cover-shapes .shape{ position:absolute; border-radius:50%; background:rgba(0,0,0,.06); }
+.cover-shapes .s1{ width:520px; height:520px; left:-160px; top:-120px; }
+.cover-shapes .s2{ width:380px; height:380px; left:60px; top:40%; transform:translateY(-50%); background:rgba(0,0,0,.045); }
+.cover-shapes .s3{ width:260px; height:260px; left:230px; top:60%; transform:translateY(-50%); background:rgba(255,255,255,.35); }
+.cover-content{ position:relative; z-index:1; flex:1.2; display:flex; flex-direction:column; align-items:flex-start; gap:16px; text-align:left; }
+.cover-week{ font-family:'IBM Plex Mono'; font-size:11.5px; letter-spacing:1.5px; color:#fff; background:#111; display:inline-block; padding:6px 13px; border-radius:20px; font-weight:600; }
+.cover-title{ font-family:'Sora'; font-weight:800; font-size:64px; line-height:.98; letter-spacing:-2px; margin:0; color:#111; }
+.cover-sub{ color:#111; opacity:.65; font-size:14px; margin-top:-4px; }
+.cover-circle{ position:relative; z-index:1; flex:1; display:flex; align-items:center; justify-content:center; }
+.cover-circle svg{ width:min(320px, 90%); filter:drop-shadow(0 20px 40px rgba(0,0,0,.15)); }
+.cover-bottombar{ border-top-color:rgba(0,0,0,.08); }
+.cover-bottombar .nav-arrow{ background:rgba(255,255,255,.5); border-color:rgba(0,0,0,.15); color:#111; }
+.cover-bottombar .nav-arrow:hover{ background:#111; color:var(--accent); border-color:#111; }
+
+.turno-row{display:flex; gap:10px;}
+.turno-pill{
+  padding:11px 26px; border-radius:11px; border:1px solid rgba(0,0,0,.15); background:rgba(255,255,255,.6);
+  font-family:'Sora'; font-weight:700; font-size:15px; cursor:pointer; transition:.15s; color:#111;
+}
+.turno-pill:hover{border-color:#111;}
+.turno-pill.active{background:#111; color:var(--accent); border-color:#111;}
+.turno-pill.small{font-size:12px; padding:9px 16px; font-weight:600; color:var(--text-dim); background:none;}
+.turno-pill.small.active{background:var(--panel-2); color:var(--text); border-color:#c9c9c0;}
+
+/* bottom chrome */
+.bottombar{
+  height:44px; min-height:44px; display:flex; align-items:center; justify-content:center; gap:14px;
+  border-top:1px solid var(--border-soft); flex-shrink:0;
+}
+.nav-arrow{
+  width:28px;height:28px;border-radius:50%; background:var(--panel); border:1px solid var(--border);
+  color:var(--text-dim); display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.nav-arrow:hover{color:var(--text); border-color:#c9c9c0;}
+.progress{display:flex; gap:6px;}
+.progress span{width:6px;height:6px;border-radius:50%; background:var(--border);}
+.progress span.on{background:var(--accent); width:16px; border-radius:4px;}
+
+/* side panel (Ações/Comentários) */
+.side-panel{
+  position:absolute; top:0; right:-360px; width:340px; height:100%;
+  background:var(--panel); border-left:1px solid var(--border);
+  z-index:60; transition:right .25s ease; display:flex; flex-direction:column;
+  box-shadow:-30px 0 60px -20px rgba(0,0,0,.5);
+}
+.side-panel.open{right:0;}
+.sp-head{padding:16px 18px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; justify-content:space-between;}
+.sp-head h4{margin:0; font-family:'Sora'; font-size:15px;}
+.sp-close{cursor:pointer; color:var(--text-dim); background:none; border:none;}
+.sp-tabs{display:flex; gap:6px; padding:12px 18px 0;}
+.sp-tab{
+  font-size:12px; font-weight:600; padding:7px 13px; border-radius:8px; cursor:pointer;
+  background:var(--panel-2); color:var(--text-dim); border:1px solid var(--border);
+}
+.sp-tab.active{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+.sp-form{padding:14px 18px; border-bottom:1px solid var(--border-soft); display:flex; flex-direction:column; gap:8px;}
+.sp-form input, .sp-form textarea{
+  background:var(--panel-2); border:1px solid var(--border); border-radius:8px; color:var(--text);
+  padding:8px 10px; font-size:12.5px; font-family:'Inter'; width:100%;
+}
+.sp-form label{font-size:10.5px; color:var(--text-faint); margin-bottom:-4px;}
+.sp-form .row2{display:flex; gap:8px;}
+.sp-submit{
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:8px; padding:9px; font-weight:700;
+  font-size:12.5px; cursor:pointer; margin-top:4px;
+}
+.sp-history{flex:1; overflow-y:auto; padding:14px 18px; display:flex; flex-direction:column; gap:10px;}
+.hist-card{
+  border-radius:10px; padding:10px 12px; font-size:12px; border:1px solid var(--border); background:var(--panel-2);
+}
+.hist-card.action{border-left:3px solid var(--accent);}
+.hist-card.comment{border-left:3px solid #4d5866;}
+.hist-top{display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-faint); margin-bottom:5px; font-family:'IBM Plex Mono';}
+.hist-title{font-weight:700; margin-bottom:3px;}
+.hist-meta{display:flex; gap:10px; font-size:10.5px; color:var(--text-dim); margin-top:6px;}
+.hist-done{
+  margin-top:8px; font-size:10.5px; font-weight:700; color:var(--good); background:#E9F7EE; border:1px solid #B9E4C7;
+  padding:4px 9px; border-radius:6px; display:inline-block; cursor:pointer;
+}
+.hist-done.pending{color:var(--text-dim); background:var(--panel); border-color:var(--border);}
+
+/* slide manager modal */
+.overlay{
+  position:absolute; inset:0; background:rgba(4,5,7,.6); z-index:70; display:none;
+  align-items:center; justify-content:center;
+}
+.overlay.open{display:flex;}
+.modal{
+  width:640px; max-height:78%; background:var(--panel); border:1px solid var(--border); border-radius:16px;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.modal-head{padding:16px 20px; border-bottom:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center;}
+.modal-head h4{margin:0; font-family:'Sora'; font-size:16px;}
+.modal-body{padding:16px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:16px;}
+.ms-area{display:flex; flex-direction:column; gap:6px;}
+.ms-area-label{
+  font-size:10.5px; font-family:'IBM Plex Mono'; letter-spacing:1px; color:var(--text-faint); text-transform:uppercase;
+  padding-left:2px;
+}
+.ms-slide{
+  display:flex; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--border);
+  border-radius:9px; padding:9px 12px; font-size:12.5px; cursor:grab;
+}
+.ms-slide .grip{color:var(--text-faint); font-size:13px;}
+.ms-slide .lock{color:var(--text-faint);}
+.ms-slide .tag{
+  margin-left:auto; font-size:9.5px; font-family:'IBM Plex Mono'; padding:2px 7px; border-radius:5px;
+  background:#FFF7CC; color:#7A6600; border:1px solid #E6D34D;
+}
+.ms-slide .tag.fixed{background:#FBEAEA; color:#A03636; border-color:#EFC6C6;}
+.ms-slide .pencil{margin-left:auto; color:var(--text-dim); cursor:pointer;}
+.modal-foot{padding:14px 20px; border-top:1px solid var(--border-soft); display:flex; justify-content:flex-end; gap:8px;}
+.btn-ghost{background:none; border:1px solid var(--border); color:var(--text-dim); padding:9px 16px; border-radius:9px; font-size:12.5px; cursor:pointer;}
+.btn-solid{background:var(--accent); border:none; color:var(--accent-ink); font-weight:700; padding:9px 18px; border-radius:9px; font-size:12.5px; cursor:pointer;}
+
+.pending-block{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text-faint);}
+.pending-block svg{width:34px;height:34px;opacity:.5;}
+.pending-block b{color:var(--text-dim); font-family:'Sora'; font-size:16px;}
+
+/* editáveis (modo admin) */
+.editable-title[contenteditable="true"], .editable-note[contenteditable="true"]{
+  outline:2px dashed #FFE600; outline-offset:3px; border-radius:6px; cursor:text;
+}
+.editable-badge{
+  display:inline-block; font-size:9px; font-family:'IBM Plex Mono'; color:#8a7400; background:#FFF7CC;
+  border:1px solid #E6D34D; padding:2px 6px; border-radius:5px; margin-left:8px; vertical-align:middle;
+}
+
+/* tela de bloqueio (slide "bloqueado") */
+.lock-screen{
+  position:absolute; inset:0; z-index:40; display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  background:rgba(255,255,255,.82); backdrop-filter:blur(6px); text-align:center;
+}
+.lock-screen.show{display:flex;}
+.lock-screen svg{width:30px;height:30px;color:var(--text-dim);}
+.lock-screen b{font-family:'Sora'; font-size:15px;}
+.lock-screen span{font-size:12px;color:var(--text-dim); max-width:260px;}
+
+/* gerenciador de slides — estados de visibilidade */
+.vis-group{display:flex; gap:4px; margin-left:auto;}
+.vis-btn{
+  width:24px;height:24px;border-radius:6px; border:1px solid var(--border); background:var(--panel);
+  display:flex;align-items:center;justify-content:center; font-size:11px; cursor:pointer; color:var(--text-faint);
+}
+.vis-btn.active{background:var(--accent); border-color:var(--accent); color:#111;}
+.ms-slide.dragover{border-color:var(--accent); background:#FFFBE0;}
+.ms-slide .del-btn{color:#A03636; cursor:pointer; margin-left:6px;}
+
+/* logo oficial — só no canto inferior direito de cada slide, em tamanho de
+   marca (não mais um watermark apagado). Maior na capa (ver .cover-slide .wm). */
+.wm{
+  position:absolute; right:24px; bottom:16px; z-index:5; pointer-events:none;
+}
+.wm img{height:26px; display:block;}
+.cover-slide .wm img{ height:46px; }
+
+/* movable slide badge on regular slides */
+.movable-badge{
+  position:absolute; top:14px; left:32px; font-size:10px; font-family:'IBM Plex Mono';
+  color:var(--text-dim); background:var(--panel); border:1px solid var(--border); padding:3px 9px; border-radius:6px;
+  display:none;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#D8D8CF; border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+<div class="deck" id="deck">
+
+  <!-- ============ SLIDE: CAPA ============ -->
+  <section class="slide active cover-slide" data-slide="capa">
+    <div class="topbar cover-topbar">
+      <div class="crumbs"><b>BRXSP24</b> · Weekly</div>
+      <div class="top-actions">
+        <span class="turno-badge cover-badge" id="connStatusPill">conectando…</span>
+      </div>
+    </div>
+    <div class="body cover-body">
+      <div class="cover-shapes" aria-hidden="true">
+        <span class="shape s1"></span><span class="shape s2"></span><span class="shape s3"></span>
+      </div>
+      <div class="cover-content">
+        <div class="cover-week">SEMANA ANTERIOR · W35 · 24–30 AGO 2026</div>
+        <h1 class="cover-title">Weekly<br>XSP24</h1>
+        <div class="cover-sub">Selecione o turno para carregar o recorte da apresentação</div>
+        <div class="turno-row">
+          <div class="turno-pill active" data-turno="Todos">Todos</div>
+          <div class="turno-pill" data-turno="T1">T1</div>
+          <div class="turno-pill" data-turno="T2">T2</div>
+          <div class="turno-pill" data-turno="T3">T3</div>
+        </div>
+      </div>
+      <div class="cover-circle">
+        <svg viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="99" fill="#F5D000"/>
+          <g stroke="#111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <rect x="46" y="96" width="42" height="34" rx="3"/>
+            <path d="M46 106h42"/>
+            <path d="M67 96v34"/>
+            <rect x="100" y="80" width="52" height="50" rx="3"/>
+            <path d="M100 95h52"/>
+            <path d="M126 80v15"/>
+            <path d="M30 130h140" stroke-width="4"/>
+            <path d="M60 130v10M150 130v10M40 130v10" stroke-width="4"/>
+            <path d="M75 70l14-16h22l14 16" />
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="bottombar cover-bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="areas">→</div>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE: ÁREAS ============ -->
+  <section class="slide" data-slide="areas">
+    <div class="topbar">
+      <div class="crumbs"><b>Navegação</b> · Turno <span id="turnoLabel">Todos</span></div>
+      <div class="top-actions"><span class="turno-badge" id="turnoBadgeTop">TODOS</span></div>
+    </div>
+    <div class="body">
+      <p class="slide-sub" style="text-align:center; margin-bottom:26px;">Clique em uma área para abrir o bloco de indicadores</p>
+      <div class="area-flow">
+        <div class="area-node" style="border-color:#E3C9C0;" data-action="goto" data-a="safety-1">
+          <div class="area-node-eyebrow">01</div>
+          <div class="area-node-title">Safety</div>
+          <div class="area-node-status">2 indicadores</div>
+        </div>
+        <div class="area-arrow">›</div>
+        <div class="area-node" data-action="goto" data-a="flow-1">
+          <div class="area-node-eyebrow">02</div>
+          <div class="area-node-title">Flow</div>
+          <div class="area-node-status">3 indicadores</div>
+        </div>
+        <div class="area-arrow">›</div>
+        <div class="area-node" data-action="goto" data-a="abs-1">
+          <div class="area-node-eyebrow">03</div>
+          <div class="area-node-title">Abs</div>
+          <div class="area-node-status">3 indicadores</div>
+        </div>
+        <div class="area-arrow">›</div>
+        <div class="area-node" data-action="goto" data-a="prod-1">
+          <div class="area-node-eyebrow">04</div>
+          <div class="area-node-title">Prod</div>
+          <div class="area-node-status">2 indicadores</div>
+        </div>
+        <div class="area-arrow">›</div>
+        <div class="area-node pending" data-action="goto" data-a="qualidade-1">
+          <div class="area-node-eyebrow">05</div>
+          <div class="area-node-title">Qualidade</div>
+          <div class="area-node-status">a definir</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="capa">←</div>
+    </div>
+  </section>
+
+  <!-- ============ SAFETY 1 ============ -->
+  <section class="slide" data-slide="safety-1" data-area="Safety">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--safety);"></span>Safety</span><b>Scorecard</b></div>
+      <div class="top-actions" id="topActions1"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Ocorrências &amp; Desvios</h2>
+      <p class="slide-sub">Fonte: aba Scorecard · últimas semanas disponíveis</p>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head">
+            <h3>Ocorrências Abertas</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="card-headnote" id="weekRangeSafety1"></span>
+              <div class="toggle-net" data-action="toggleOn" title="Alternar NET vs. semana anterior">⇄</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="chartOcorrencias"></canvas></div>
+            <div class="insight editable-note" data-notekey="insight_ocorrencias">
+              <b>Leitura:</b> clique em editar para descrever o que está acontecendo com ocorrências.
+            </div>
+          </div>
+          <button class="offender-btn" data-action="goto" data-a="safety-2">Ver ofensores →</button>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h3>Desvios em Aberto</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="card-headnote" id="weekRangeSafety1b"></span>
+              <div class="toggle-net" data-action="toggleOn" title="Alternar NET vs. semana anterior">⇄</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="chartDesvios"></canvas></div>
+            <div class="insight editable-note" data-notekey="insight_desvios">
+              <b>Leitura:</b> clique em editar para descrever o que está acontecendo com desvios.
+            </div>
+          </div>
+          <button class="offender-btn" data-action="goto" data-a="safety-3">Ver ofensores →</button>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="areas">←</div>
+      <div class="progress"><span class="on"></span><span></span><span></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="safety-2">→</div>
+    </div>
+  </section>
+
+  <!-- ============ SAFETY 2 — Pareto Ocorrências ============ -->
+  <section class="slide" data-slide="safety-2" data-area="Safety">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--safety);"></span>Safety</span><b>Pareto de Ocorrências</b></div>
+      <div class="top-actions" id="topActions2"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Ofensores — Ocorrências</h2>
+      <p class="slide-sub">Fonte prevista: aba <b>[She] Ocorrencias</b> · <span class="fict-tag">estrutura fictícia, aguardando dados reais</span></p>
+      <div class="card" style="flex:1;">
+        <div class="card-body pareto-wrap">
+          <div class="chart-wrap"><canvas id="chartParetoOcorrencias"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="safety-1">←</div>
+      <div class="progress"><span></span><span class="on"></span><span></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="safety-3">→</div>
+    </div>
+  </section>
+
+  <!-- ============ SAFETY 3 — Pareto Desvios ============ -->
+  <section class="slide" data-slide="safety-3" data-area="Safety">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--safety);"></span>Safety</span><b>Pareto de Desvios</b></div>
+      <div class="top-actions" id="topActions3"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Ofensores — Desvios</h2>
+      <p class="slide-sub">Fonte prevista: aba <b>[She] Desvios</b> · <span class="fict-tag">estrutura fictícia, aguardando dados reais</span></p>
+      <div class="card" style="flex:1;">
+        <div class="card-body pareto-wrap">
+          <div class="chart-wrap"><canvas id="chartParetoDesvios"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="safety-2">←</div>
+      <div class="progress"><span></span><span></span><span class="on"></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="flow-1">→</div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW 1 — Volume Total ============ -->
+  <section class="slide" data-slide="flow-1" data-area="Flow">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--flow);"></span>Flow</span><b>Volume Total</b></div>
+      <div class="top-actions" id="topActions4"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Volume Total</h2>
+      <p class="slide-sub">Fonte: aba Scorecard · pacotes expedidos, últimas 4 semanas (dado real)</p>
+      <div class="grid-main-side">
+        <div class="card">
+          <div class="card-head"><h3>Pacotes expedidos por turno</h3><span class="card-headnote" id="weekRangeFlow1"></span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Dificuldades da semana</h3></div>
+          <textarea id="notaDificuldades" class="editable-note" data-notekey="dificuldades" style="flex:1;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:10px;font-size:12px;resize:none;font-family:'Inter';" placeholder="Registrar dificuldades operacionais da semana (editável pelo analista)..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="safety-3">←</div>
+      <div class="progress"><span class="on"></span><span></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="flow-2">→</div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW 2 — Plano vs Real + Ociosidade ============ -->
+  <section class="slide" data-slide="flow-2" data-area="Flow">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--flow);"></span>Flow</span><b>Plano vs. Real · Ociosidade</b></div>
+      <div class="top-actions" id="topActions5"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Plano vs. Real · Ociosidade</h2>
+      <p class="slide-sub">Fonte: aba Scorecard · dado real</p>
+      <div class="stack">
+        <div class="card" style="flex:1;">
+          <div class="card-head"><h3>Plano vs. Volume Real</h3><span class="card-headnote" id="weekRangeFlow2a"></span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartPlano"></canvas></div></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-head"><h3>Ociosidade</h3><span class="card-headnote" id="weekRangeFlow2b"></span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartOciosidade"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="flow-1">←</div>
+      <div class="progress"><span></span><span class="on"></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="abs-1">→</div>
+    </div>
+  </section>
+
+  <!-- ============ ABS 1 ============ -->
+  <section class="slide" data-slide="abs-1" data-area="Abs">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--abs);"></span>Abs</span><b>Absenteísmo</b></div>
+      <div class="top-actions" id="topActions6"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">Absenteísmo</h2>
+      <p class="slide-sub">Fonte: aba Scorecard (ABS Geral) + ABS Por Ofensor / ABS Por Área · dado real</p>
+      <div class="stack" style="gap:14px;">
+        <div class="card" style="flex:1.1;">
+          <div class="card-head"><h3>ABS Geral</h3><span class="card-headnote" id="weekRangeAbs1"></span></div>
+          <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsGeral"></canvas></div></div>
+        </div>
+        <div class="grid2" style="flex:1;">
+          <div class="card">
+            <div class="card-head"><h3>Pareto por ofensor</h3><span class="card-headnote">29/08 vs 22/08</span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsOfensor"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Pareto por área</h3><span class="card-headnote">29/08 vs 22/08</span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsArea"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="flow-2">←</div>
+      <div class="progress"><span class="on"></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="prod-1">→</div>
+    </div>
+  </section>
+
+  <!-- ============ PROD 1 ============ -->
+  <section class="slide" data-slide="prod-1" data-area="Prod">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--prod);"></span>Prod</span><b>DOT / OOT</b></div>
+      <div class="top-actions" id="topActions7"></div>
+    </div>
+    <div class="body">
+      <h2 class="slide-title editable-title">DOT / OOT</h2>
+      <p class="slide-sub">Fonte: aba Scorecard · barra por turno + geral, últimas semanas (dado real)</p>
+      <div class="grid-main-side">
+        <div class="stack">
+          <div class="card" style="flex:1;">
+            <div class="card-head"><h3>DOT</h3><span class="card-headnote" id="weekRangeProd1a"></span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartDOT"></canvas></div></div>
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="card-head"><h3>OOT</h3><span class="card-headnote" id="weekRangeProd1b"></span></div>
+            <div class="card-body"><div class="chart-wrap"><canvas id="chartOOT"></canvas></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Comentários por dia</h3></div>
+          <div id="notaComentariosDia" class="editable-note" data-notekey="comentarios_dia" style="flex:1;overflow-y:auto;white-space:pre-wrap;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:11.5px;line-height:1.6;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="abs-1">←</div>
+      <div class="progress"><span class="on"></span></div>
+      <div class="nav-arrow" data-action="goto" data-a="qualidade-1">→</div>
+    </div>
+  </section>
+
+  <!-- ============ QUALIDADE (placeholder) ============ -->
+  <section class="slide" data-slide="qualidade-1" data-area="Qualidade">
+    <div class="topbar">
+      <div class="crumbs"><span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(--qualidade);"></span>Qualidade</span></div>
+      <div class="top-actions" id="topActions8"></div>
+    </div>
+    <div class="body">
+      <div class="pending-block">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <b>Bloco em definição</b>
+        <span style="font-size:12px;max-width:320px;text-align:center;">Ainda não há indicadores nem aba de origem mapeados para Qualidade. Assim que definirmos as métricas, este bloco ganha os slides fixos.</span>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="nav-arrow" data-action="goto" data-a="prod-1">←</div>
+      <div class="nav-arrow" data-action="goto" data-a="capa">⤒</div>
+    </div>
+  </section>
+
+  <!-- ============ SIDE PANEL: Ações & Comentários ============ -->
+  <div class="side-panel" id="sidePanel">
+    <div class="sp-head">
+      <h4>Ações &amp; Comentários · <span id="spArea">Safety</span></h4>
+      <button class="sp-close" data-action="closeSide">✕</button>
+    </div>
+    <div class="sp-tabs">
+      <div class="sp-tab active" data-tab="acao" data-action="setTab" data-a="acao">Ação</div>
+      <div class="sp-tab" data-tab="comentario" data-action="setTab" data-a="comentario">Comentário</div>
+    </div>
+    <div class="sp-form" id="formAcao">
+      <label>Nome</label><input id="acaoNome" placeholder="Como você quer ser identificado?">
+      <div class="row2">
+        <div style="flex:1;"><label>Atual*</label><input id="acaoAtual" placeholder="ex: 31,5%"></div>
+        <div style="flex:1;"><label>Meta</label><input id="acaoMeta" placeholder="ex: 25%"></div>
+      </div>
+      <label>Descrição (título da ação)</label><input id="acaoDescricao" placeholder="ex: Reduzir ABS T2">
+      <label>Comentário</label><textarea id="acaoComentario" rows="3" placeholder="descreva o plano de ação..."></textarea>
+      <button class="sp-submit" data-action="submitAcao">Salvar ação</button>
+      <div class="sp-error" id="acaoError" style="display:none;color:var(--bad);font-size:11px;"></div>
+    </div>
+    <div class="sp-form" id="formComentario" style="display:none;">
+      <label>Nome</label><input id="comentNome" placeholder="Como você quer ser identificado?">
+      <label>Comentário</label><textarea id="comentTexto" rows="4" placeholder="escreva o comentário..."></textarea>
+      <button class="sp-submit" data-action="submitComentario">Salvar comentário</button>
+      <div class="sp-error" id="comentError" style="display:none;color:var(--bad);font-size:11px;"></div>
+    </div>
+    <div class="sp-history" id="spHistory">
+      <div style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px 0;">Carregando histórico...</div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: gerenciador de slides ============ -->
+  <div class="overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalTitle">Novo Slide</h4>
+        <button class="sp-close" data-action="closeModal">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px 0;">Carregando slides...</div>
+      </div>
+      <div class="modal-foot" id="modalFoot" style="display:none;">
+        <button class="btn-ghost" data-action="closeModal">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FORM: novo/editar slide (dentro do modal) ============ -->
+  <div class="overlay" id="slideFormOverlay">
+    <div class="modal" style="width:460px;">
+      <div class="modal-head">
+        <h4 id="slideFormTitle">Novo slide</h4>
+        <button class="sp-close" data-action="closeSlideForm">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="ms-area">
+          <div class="ms-area-label">Área</div>
+          <input id="sfArea" disabled style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;">
+          <div class="ms-area-label" style="margin-top:6px;">Título</div>
+          <input id="sfTitulo" placeholder="Título do slide" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;">
+          <div class="ms-area-label" style="margin-top:6px;">Tipo de conteúdo</div>
+          <select id="sfTipo" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;">
+            <option value="quadro">Quadro em branco (texto)</option>
+            <option value="url">Link URL (navegação incorporada)</option>
+            <option value="ppt">Link de PPT (Google Apresentações público)</option>
+            <option value="upload">Upload de imagem (URL da imagem)</option>
+            <option value="comentario">Caixa de comentário</option>
+          </select>
+          <div id="sfDynamicFields"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" data-action="closeSlideForm">Cancelar</button>
+        <button class="btn-solid" data-action="saveSlideForm">Salvar slide</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ====================================================================
+   ALARME GLOBAL DE ERRO — pega qualquer erro de JavaScript que quebraria
+   o app silenciosamente (só no console, que ninguém vê) e mostra na tela.
+   Fica logo no início do script de propósito, pra capturar erro em
+   qualquer parte do código que vier depois.
+   ==================================================================== */
+window.addEventListener('error', function(ev){
+  console.error('Erro JS não tratado:', ev.error || ev.message);
+  try {
+    showDiagnosticBanner(
+      'Erro inesperado no aplicativo',
+      'Aconteceu um erro de JavaScript que pode ter travado parte do app.',
+      ['Mensagem técnica: ' + (ev.message || 'desconhecida') + (ev.filename ? ' — ' + ev.filename.split('/').pop() + ':' + ev.lineno : '')]
+    );
+  } catch(e) { /* se até o próprio alarme falhar, não trava mais nada */ }
+});
+
+/* ====================================================================
+   DESPACHANTE CENTRAL DE CLIQUES — substitui TODO onclick="" do app.
+
+   Por quê: alguns ambientes corporativos (política de segurança do
+   navegador, extensões de proteção) bloqueiam atributo onclick="" direto
+   no HTML — o clique simplesmente não faz nada, sem erro nenhum visível.
+   addEventListener() feito por código não cai nessa restrição.
+
+   Todo elemento clicável do app tem "data-action" (e "data-a"/"data-b"/
+   "data-c" quando precisa de argumento) em vez de onclick — funciona
+   tanto pra HTML fixo quanto pra HTML criado dinamicamente (o listener
+   fica no document, então cobre qualquer elemento novo automaticamente).
+   ==================================================================== */
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const a = el.dataset.a, b = el.dataset.b, c = el.dataset.c;
+  switch (el.dataset.action){
+    case 'goto': goTo(a); break;
+    case 'closeModal': closeModal(); break;
+    case 'closeSide': closeSide(); break;
+    case 'closeSlideForm': closeSlideForm(); break;
+    case 'closeOverlay': { const o = document.getElementById(a); if (o) o.classList.remove('open'); break; }
+    case 'removeEl': { const o = document.getElementById(a); if (o) o.remove(); break; }
+    case 'toggleOn': el.classList.toggle('on'); break;
+    case 'toggleMenu': toggleMenu(el, e); break;
+    case 'setTab': setTab(a); break;
+    case 'submitAcao': submitAcao(); break;
+    case 'submitComentario': submitComentario(); break;
+    case 'saveSlideForm': saveSlideForm(); break;
+    case 'openSlideManager': openSlideManager(a); break;
+    case 'openSide': openSide(a, b, c); break;
+    case 'setVis': setVis(a, b); break;
+    case 'openSlideForm': openSlideForm(a || null); break;
+    case 'removeSlide': removeSlide(a); break;
+    case 'toggleConcluido': toggleConcluido(a); break;
+  }
+});
+
+// arrastar slide no gerenciador (mesma lógica, mas via addEventListener
+// em vez de ondragstart/ondragover/ondragleave/ondrop inline)
+document.addEventListener('dragstart', function(e){
+  const el = e.target.closest('.ms-slide[data-id]');
+  if (el) dragSlideStart(e, el.dataset.id);
+});
+document.addEventListener('dragover', function(e){
+  const el = e.target.closest('.ms-slide[data-id]');
+  if (el) { e.preventDefault(); el.classList.add('dragover'); }
+});
+document.addEventListener('dragleave', function(e){
+  const el = e.target.closest('.ms-slide[data-id]');
+  if (el) el.classList.remove('dragover');
+});
+document.addEventListener('drop', function(e){
+  const el = e.target.closest('.ms-slide[data-id]');
+  if (el) { el.classList.remove('dragover'); dragSlideDrop(e, el.dataset.id); }
+});
+
+// select de tipo de conteúdo no form de slide — é um elemento fixo desde
+// o carregamento da página, então liga direto (não precisa de delegação)
+document.addEventListener('DOMContentLoaded', function(){
+  const sel = document.getElementById('sfTipo');
+  if (sel) sel.addEventListener('change', ()=>renderSlideFormFields());
+});
+
+/* ====================================================================
+   LOGO OFICIAL — arquivo enviado por vocês, embutido em base64 (funciona
+   igual publicado dentro do Apps Script ou em hospedagem estática, sem
+   depender de caminho relativo nenhum).
+   ==================================================================== */
+const LOGO_DATA_URI = 'data:image/png;base64,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';
+
+document.querySelectorAll('.slide').forEach(s=>{
+  const wm = document.createElement('div');
+  wm.className = 'wm';
+  wm.innerHTML = `<img src="${LOGO_DATA_URI}" alt="">`;
+  s.appendChild(wm);
+  // tela de bloqueio (usada quando visibilidade = "bloqueado")
+  const ls = document.createElement('div');
+  ls.className = 'lock-screen';
+  ls.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><b>Conteúdo bloqueado</b><span>Este slide foi temporariamente bloqueado pelo time. Fale com a liderança da área se precisar ver o conteúdo.</span>`;
+  s.appendChild(ls);
+});
+
+/* ====================================================================
+   CONEXÃO COM O BACKEND (Code.gs) — via fetch() puro, na URL pública /exec
+
+   >>> COLE AQUI A URL DO SEU DEPLOY (a que termina em /exec) <<<
+   Precisa estar publicado com "Quem tem acesso: Qualquer pessoa" — sem
+   isso, essa chamada cai numa tela de login e falha.
+
+   APP_VERSION é só pra confirmar, no selo do topo da capa, se o deploy
+   pegou o código mais novo.
+   ==================================================================== */
+const API_URL = 'https://script.google.com/a/macros/mercadolivre.com/s/AKfycbyErvszYc8_wglxiS_NZvtjh-iCk7zC-ptdtZNL7zug0T41T3wuNMXr7V7TDydad8E35Q/exec';
+const APP_VERSION = 'v9-2026-08-31';
+
+const READ_ACTIONS = { apiWhoAmI:'whoami', apiScorecard:'scorecard', apiAbsOfensor:'abs_ofensor', apiAbsArea:'abs_area',
+  apiAcoes:'acoes', apiComentarios:'comentarios', apiSlides:'slides', apiBootstrap:'bootstrap' };
+const WRITE_ACTIONS = { apiAddAcao:'add_acao', apiUpdateAcao:'update_acao', apiAddComentario:'add_comentario',
+  apiAddSlide:'add_slide', apiUpdateSlide:'update_slide', apiDeleteSlide:'delete_slide',
+  apiReorderSlides:'reorder_slides', apiSetVisibility:'set_visibility', apiAddLink:'add_link', apiUpdateLink:'update_link' };
+
+function apiCall(fnName, payload){
+  return new Promise((resolve, reject)=>{
+    // Nunca deixa a chamada ficar pendurada pra sempre.
+    let done = false;
+    const timeoutId = setTimeout(()=>{
+      if (done) return;
+      done = true;
+      reject('Tempo esgotado (25s) esperando resposta de ' + API_URL);
+    }, 25000);
+    function ok(v){ if (done) return; done = true; clearTimeout(timeoutId); resolve(v); }
+    function fail(e){ if (done) return; done = true; clearTimeout(timeoutId); reject(e); }
+
+    if (!API_URL || API_URL.indexOf('COLE_SUA_URL') !== -1){
+      fail('API_URL ainda não foi preenchida no topo do <script>.');
+      return;
+    }
+
+    if (READ_ACTIONS[fnName]) {
+      fetch(API_URL + '?action=' + READ_ACTIONS[fnName])
+        .then(r=>r.json())
+        .then(j=> j.ok ? ok(j.data) : fail(j.error))
+        .catch(e=>fail('Falha de rede: ' + e.message + ' — confirme que o Deploy está com acesso "Qualquer pessoa".'));
+    } else if (WRITE_ACTIONS[fnName]) {
+      fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify(Object.assign({ action: WRITE_ACTIONS[fnName] }, payload || {})) })
+        .then(r=>r.json())
+        .then(j=> j.ok ? ok(j.data) : fail(j.error))
+        .catch(e=>fail('Falha de rede ao salvar: ' + e.message));
+    } else {
+      fail('função desconhecida: ' + fnName);
+    }
+  });
+}
+
+/* ====================================================================
+   ESTADO GLOBAL
+   ==================================================================== */
+let STATE = { whoami:{email:'',isAdmin:false}, scorecard:[], abs_ofensor:[], abs_area:[], acoes:[], comentarios:[], slides:[] };
+let currentArea = null;
+let currentSlideForPanel = null;
+let editingSlideId = null; // slide sendo editado no slideForm (null = criando novo)
+const AREA_ORDER = ['Safety','Flow','Abs','Prod','Qualidade'];
+const chartInstances = {};
+
+function boot(){
+  const pill = document.getElementById('connStatusPill');
+  if (pill) pill.textContent = 'conectando…';
+
+  if (!API_URL || API_URL.indexOf('COLE_SUA_URL') !== -1) {
+    showDiagnosticBanner(
+      'Falta colar a URL do backend',
+      'A constante API_URL no topo do &lt;script&gt; ainda está com o texto de exemplo.',
+      ['Edite o index.html, ache "const API_URL" e cole ali a URL que termina em /exec.']
+    );
+    if (pill) { pill.textContent = '🔴 sem API_URL'; }
+    return;
+  }
+
+  apiCall('apiBootstrap').then(data=>{
+    if (!data || typeof data !== 'object') {
+      throw new Error('O backend respondeu vazio (sem dados). Isso costuma acontecer quando a execução no Apps Script precisa de uma nova autorização — abra o editor do Apps Script uma vez, rode qualquer função pelo botão ▶ pra aceitar as permissões pedidas, e recarregue esta página.');
+    }
+    STATE = data;
+    const who = STATE.whoami || {};
+    if (pill) {
+      const backendV = who.appVersion || '?';
+      const versionTag = (backendV === APP_VERSION) ? APP_VERSION : ('front ' + APP_VERSION + ' / back ' + backendV + ' ⚠️ DIFERENTES');
+      pill.textContent = '🟢 conectado · ' + versionTag;
+    }
+    applyAdminUI();
+    renderAllCharts();
+    applyEditableNotes();
+    wireNavigation();
+    applyVisibilityLocks();
+
+    // avisos por seção (ex.: uma aba vazia/renomeada) — NÃO usam o banner de
+    // tela cheia (isso bloquearia clique em tudo por baixo); só um toast
+    // pequeno e dispensável no canto.
+    const avisos = STATE._avisos || {};
+    const chaves = Object.keys(avisos);
+    if (chaves.length){
+      console.warn('Avisos do backend:', avisos);
+      showToast('Carregado, mas ' + chaves.length + ' seção(ões) sem dado ainda',
+        chaves.map(k => '<b>' + k + '</b>: ' + avisos[k]));
+    }
+  }).catch(err=>{
+    console.error('Falha ao carregar dados do Apps Script:', err);
+    if (pill) pill.textContent = '🔴 erro de conexão';
+    showDiagnosticBanner(
+      'Não consegui carregar os dados',
+      'O app tentou chamar o backend e recebeu um erro.',
+      ['Mensagem técnica: ' + err]
+    );
+  });
+}
+document.addEventListener('DOMContentLoaded', boot);
+
+function showDiagnosticBanner(title, subtitle, bullets){
+  let el = document.getElementById('diagBanner');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'diagBanner';
+    // IMPORTANTE: pointer-events:none no wrapper inteiro — isso garante que
+    // clicar em qualquer lugar da tela FORA do card branco sempre passa
+    // direto pro app por baixo. Só o card em si (pointer-events:auto)
+    // recebe clique. Nunca mais um aviso trava a navegação do app.
+    el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding-top:40px;font-family:Inter,sans-serif;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = `
+    <div style="pointer-events:auto;background:#fff;border-radius:16px;max-width:560px;max-height:70vh;overflow-y:auto;padding:24px 26px;box-shadow:0 30px 80px rgba(0,0,0,.35);border:1px solid #eee;">
+      <div style="font-family:Sora,sans-serif;font-weight:800;font-size:17px;margin-bottom:8px;color:#111;">⚠️ ${title}</div>
+      <div style="font-size:12.5px;color:#444;line-height:1.5;margin-bottom:12px;">${subtitle}</div>
+      <ol style="font-size:12px;color:#333;line-height:1.7;padding-left:18px;margin:0 0 14px;word-break:break-word;">
+        ${bullets.map(b=>'<li>'+b+'</li>').join('')}
+      </ol>
+      <button data-action="removeEl" data-a="diagBanner" style="background:#FFE600;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:12px;cursor:pointer;">Entendi, fechar</button>
+    </div>`;
+}
+
+// Toast leve — canto da tela, NÃO cobre o resto do app, some sozinho.
+// Usado pra avisos que não impedem o app de funcionar.
+function showToast(title, lines){
+  let el = document.getElementById('appToast');
+  if (el) el.remove();
+  el = document.createElement('div');
+  el.id = 'appToast';
+  el.style.cssText = 'position:fixed;left:20px;bottom:20px;z-index:9999;max-width:360px;background:#fff;border:1px solid #E3E3DC;border-radius:12px;padding:14px 16px;box-shadow:0 20px 50px rgba(0,0,0,.25);font-family:Inter,sans-serif;pointer-events:auto;';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+      <div style="font-family:Sora,sans-serif;font-weight:700;font-size:12.5px;color:#111;">ℹ️ ${title}</div>
+      <button data-action="removeEl" data-a="appToast" style="background:none;border:none;color:#8a8a83;cursor:pointer;font-size:13px;line-height:1;">✕</button>
+    </div>
+    <ul style="font-size:11px;color:#555;line-height:1.6;padding-left:16px;margin:8px 0 0;">
+      ${lines.map(l=>'<li>'+l+'</li>').join('')}
+    </ul>`;
+  document.body.appendChild(el);
+  // some sozinho depois de um tempo, sem precisar fechar manualmente
+  setTimeout(()=>{ const e = document.getElementById('appToast'); if (e) e.remove(); }, 15000);
+}
+
+/* ====================================================================
+   PERMISSÃO — mostra ícones de edição só para quem está em "E-mails Prod"
+   ==================================================================== */
+function applyAdminUI(){
+  const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+  document.querySelectorAll('.slide[data-area]').forEach(slideEl=>{
+    const holder = slideEl.querySelector('.top-actions');
+    if (!holder) return;
+    holder.innerHTML = isAdmin ? buildTopActionsHTML(slideEl.dataset.area, slideEl.dataset.slide) : '';
+  });
+}
+
+const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>`;
+const chatIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5A8.38 8.38 0 0 1 3.5 11 8.5 8.5 0 0 1 12 3a8.38 8.38 0 0 1 9 8.5z"/></svg>`;
+
+function buildTopActionsHTML(area, slideId){
+  return `
+    <div class="icon-btn" data-action="toggleMenu">${editIcon}
+      <div class="menu" data-menu="edit">
+        <button data-action="openSlideManager" data-a="${area}">${editIcon}Criar novo slide</button>
+        <button data-action="openSlideManager" data-a="${area}">✎ Editar / mover / excluir slides</button>
+      </div>
+    </div>
+    <div class="icon-btn" data-action="toggleMenu">${chatIcon}
+      <div class="menu" data-menu="ac">
+        <button data-action="openSide" data-a="${area}" data-b="${slideId}" data-c="acao">${chatIcon}Ação</button>
+        <button data-action="openSide" data-a="${area}" data-b="${slideId}" data-c="comentario">💬 Comentário</button>
+      </div>
+    </div>`;
+}
+function toggleMenu(btn, ev){
+  document.querySelectorAll('.menu.open').forEach(m=>{ if (m.parentElement!==btn) m.classList.remove('open'); });
+  btn.querySelector('.menu').classList.toggle('open');
+  if (ev) ev.stopPropagation();
+}
+document.addEventListener('click', ()=> document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open')));
+
+/* ====================================================================
+   NAVEGAÇÃO — slide fixo + móvel juntos, ordenados por "ordem"
+   ==================================================================== */
+function visibleSlidesForArea(area){
+  return STATE.slides.filter(s => s.area === area && s.visibilidade !== 'oculto').sort((a,b)=>a.ordem-b.ordem);
+}
+function allSlidesForArea(area){
+  return STATE.slides.filter(s => s.area === area).sort((a,b)=>a.ordem-b.ordem);
+}
+function flatFlow(){
+  let flat = [];
+  AREA_ORDER.forEach(area => flat = flat.concat(visibleSlidesForArea(area).map(s => ({ id:s.id, area }))));
+  return flat;
+}
+function goTo(name){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  const target = document.querySelector('[data-slide="'+name+'"]');
+  if (target) target.classList.add('active');
+  applyVisibilityLocks();
+}
+function applyVisibilityLocks(){
+  const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+  document.querySelectorAll('.slide').forEach(slideEl=>{
+    const id = slideEl.dataset.slide;
+    const s = STATE.slides.find(x=>x.id===id);
+    const ls = slideEl.querySelector('.lock-screen');
+    if (!ls) return;
+    const blocked = s && s.visibilidade === 'bloqueado' && !isAdmin;
+    ls.classList.toggle('show', !!blocked);
+  });
+}
+function wireNavigation(){
+  renderMovableSlides();
+  const flat = flatFlow();
+  flat.forEach((entry, i)=>{
+    const el = document.querySelector('[data-slide="'+entry.id+'"]');
+    if (!el) return;
+    const bb = el.querySelector('.bottombar');
+    if (!bb) return;
+    const arrows = bb.querySelectorAll('.nav-arrow');
+    const prevId = i>0 ? flat[i-1].id : 'areas';
+    const nextId = i<flat.length-1 ? flat[i+1].id : 'capa';
+    if (arrows[0]) arrows[0].onclick = ()=>goTo(prevId);
+    if (arrows[arrows.length-1]) arrows[arrows.length-1].onclick = ()=>goTo(nextId);
+    const areaSlides = visibleSlidesForArea(entry.area);
+    const idxInArea = areaSlides.findIndex(s=>s.id===entry.id);
+    const prog = bb.querySelector('.progress');
+    if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'"></span>').join('');
+  });
+}
+
+/* ====================================================================
+   SLIDES MÓVEIS — criados dinamicamente a partir de STATE.slides
+   ==================================================================== */
+function renderMovableSlides(){
+  document.querySelectorAll('.slide.movable-injected').forEach(el=>el.remove());
+  STATE.slides.filter(s=>!s.fixo).forEach(s=>{
+    const el = document.createElement('section');
+    el.className = 'slide movable-injected';
+    el.dataset.slide = s.id;
+    el.dataset.area = s.area;
+    const areaColorVar = { Safety:'--safety', Flow:'--flow', Abs:'--abs', Prod:'--prod', Qualidade:'--qualidade' }[s.area] || '--text';
+    el.innerHTML = `
+      <div class="topbar">
+        <div class="crumbs">
+          <span class="area-chip" style="background:#F7F7F4;color:var(--text);border:1px solid var(--border);"><span class="dot" style="background:var(${areaColorVar});"></span>${s.area}</span>
+          <b>${escapeHtml(s.titulo||'Slide')}</b>
+          <span class="movable-badge" style="display:inline-block;">móvel</span>
+        </div>
+        <div class="top-actions"></div>
+      </div>
+      <div class="body">${renderSlideContentHTML(s)}</div>
+      <div class="bottombar">
+        <div class="nav-arrow">←</div>
+        <div class="progress"></div>
+        <div class="nav-arrow">→</div>
+      </div>`;
+    document.getElementById('deck').appendChild(el);
+    const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+    if (isAdmin) el.querySelector('.top-actions').innerHTML = buildTopActionsHTML(s.area, s.id);
+    // marca d'água + tela de bloqueio (mesmo tratamento dos slides fixos)
+    const wm = document.createElement('div'); wm.className='wm';
+    wm.innerHTML = `<img src="${LOGO_DATA_URI}" alt="">`;
+    el.appendChild(wm);
+    const ls = document.createElement('div'); ls.className='lock-screen';
+    ls.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><b>Conteúdo bloqueado</b><span>Este slide foi temporariamente bloqueado pelo time.</span>`;
+    el.appendChild(ls);
+  });
+}
+function renderSlideContentHTML(s){
+  const c = s.conteudo || {};
+  switch(s.tipo){
+    case 'url':
+      return `<div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;color:var(--text-faint);">Se a página não carregar aqui dentro, o site provavelmente bloqueia incorporação (iframe) — <a href="${escapeAttr(c.url||'#')}" target="_blank" style="color:var(--text);">abrir em nova aba ↗</a></div>
+        <iframe src="${escapeAttr(c.url||'')}" style="flex:1;border:1px solid var(--border);border-radius:10px;width:100%;"></iframe>
+      </div>`;
+    case 'ppt':
+      const embedUrl = (c.link||'').replace(/\/edit.*$/, '/embed?start=false&loop=false&delayms=3000');
+      return `<iframe src="${escapeAttr(embedUrl)}" style="flex:1;border:1px solid var(--border);border-radius:10px;width:100%;"></iframe>`;
+    case 'upload':
+      return `<div style="flex:1;display:flex;align-items:center;justify-content:center;"><img src="${escapeAttr(c.url||'')}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;"></div>`;
+    case 'comentario':
+      return `<div style="flex:1;display:flex;align-items:center;justify-content:center;background:${escapeAttr(c.cor||'var(--panel)')};border:1px solid var(--border);border-radius:14px;padding:30px;">
+        <p style="font-size:18px;font-family:'Sora';font-weight:600;text-align:center;max-width:70%;">${escapeHtml(c.texto||'')}</p></div>`;
+    default: // 'quadro'
+      return `<div style="flex:1;padding:20px;color:${escapeAttr(c.cor||'var(--text)')};font-size:16px;line-height:1.6;white-space:pre-wrap;">${escapeHtml(c.texto||'')}</div>`;
+  }
+}
+function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+function escapeAttr(str){ return escapeHtml(str); }
+
+/* ====================================================================
+   GERENCIADOR DE SLIDES (modal ⋮ → Criar/Editar)
+   ==================================================================== */
+function openSlideManager(area){
+  currentArea = area;
+  document.getElementById('modalTitle').textContent = 'Slides — ' + area;
+  renderSlideManagerBody();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function renderSlideManagerBody(){
+  const body = document.getElementById('modalBody');
+  const slides = allSlidesForArea(currentArea);
+  const visLabel = { visivel:'👁', bloqueado:'🔒', oculto:'🚫' };
+  body.innerHTML = `
+    <div class="ms-area">
+      <div class="ms-area-label">${currentArea}</div>
+      ${slides.map(s => `
+        <div class="ms-slide" draggable="${!s.fixo}" data-id="${s.id}">
+          <span class="${s.fixo?'lock':'grip'}">${s.fixo?'🔒':'⠿'}</span>
+          <span>${escapeHtml(s.titulo)}</span>
+          <span class="tag ${s.fixo?'fixed':''}">${s.fixo?'fixo':'móvel'}</span>
+          <div class="vis-group">
+            <div class="vis-btn ${s.visibilidade==='visivel'?'active':''}" title="Visível" data-action="setVis" data-a="${s.id}" data-b="visivel">👁</div>
+            <div class="vis-btn ${s.visibilidade==='bloqueado'?'active':''}" title="Bloqueado (cadeado)" data-action="setVis" data-a="${s.id}" data-b="bloqueado">🔒</div>
+            <div class="vis-btn ${s.visibilidade==='oculto'?'active':''}" title="Oculto (some da navegação)" data-action="setVis" data-a="${s.id}" data-b="oculto">🚫</div>
+          </div>
+          ${!s.fixo ? `<span class="pencil" data-action="openSlideForm" data-a="${s.id}" title="Editar">✎</span><span class="del-btn" data-action="removeSlide" data-a="${s.id}" title="Excluir">🗑</span>` : ''}
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('modalFoot').style.display = 'flex';
+  document.getElementById('modalFoot').innerHTML = `
+    <button class="btn-ghost" data-action="closeModal">Fechar</button>
+    <button class="btn-solid" data-action="openSlideForm" data-a="">+ Adicionar slide nesta área</button>`;
+}
+
+let dragSourceId = null;
+function dragSlideStart(ev, id){ dragSourceId = id; }
+function dragSlideDrop(ev, targetId){
+  ev.preventDefault();
+  if (!dragSourceId || dragSourceId===targetId) return;
+  const slides = allSlidesForArea(currentArea);
+  const targetIdx = slides.findIndex(s=>s.id===targetId);
+  const before = slides[targetIdx-1];
+  const after = slides[targetIdx];
+  const newOrdem = before ? (before.ordem + after.ordem)/2 : after.ordem - 1;
+  apiCall('apiUpdateSlide', { id: dragSourceId, ordem: newOrdem }).then(()=>{
+    const s = STATE.slides.find(x=>x.id===dragSourceId); if (s) s.ordem = newOrdem;
+    renderSlideManagerBody(); wireNavigation();
+  }).catch(err=>alert('Erro ao mover: '+err));
+}
+function setVis(id, vis){
+  apiCall('apiSetVisibility', { id, visibilidade: vis }).then(()=>{
+    const s = STATE.slides.find(x=>x.id===id); if (s) s.visibilidade = vis;
+    renderSlideManagerBody(); wireNavigation(); applyVisibilityLocks();
+  }).catch(err=>alert('Erro ao alterar visibilidade: '+err));
+}
+function removeSlide(id){
+  if (!confirm('Excluir este slide móvel? Essa ação não pode ser desfeita.')) return;
+  apiCall('apiDeleteSlide', { id }).then(()=>{
+    STATE.slides = STATE.slides.filter(s=>s.id!==id);
+    renderSlideManagerBody(); wireNavigation();
+  }).catch(err=>alert('Erro ao excluir: '+err));
+}
+
+/* ---- form de criar/editar slide móvel ---- */
+function openSlideForm(id){
+  editingSlideId = id;
+  const s = id ? STATE.slides.find(x=>x.id===id) : null;
+  document.getElementById('slideFormTitle').textContent = s ? 'Editar slide' : 'Novo slide';
+  document.getElementById('sfArea').value = currentArea;
+  document.getElementById('sfTitulo').value = s ? s.titulo : '';
+  document.getElementById('sfTipo').value = s ? s.tipo : 'quadro';
+  renderSlideFormFields(s ? s.conteudo : {});
+  document.getElementById('slideFormOverlay').classList.add('open');
+}
+function closeSlideForm(){ document.getElementById('slideFormOverlay').classList.remove('open'); }
+function renderSlideFormFields(conteudo){
+  conteudo = conteudo || {};
+  const tipo = document.getElementById('sfTipo').value;
+  const holder = document.getElementById('sfDynamicFields');
+  const fieldStyle = "background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;width:100%;margin-top:6px;";
+  if (tipo==='quadro'){
+    holder.innerHTML = `
+      <div class="ms-area-label" style="margin-top:6px;">Texto</div>
+      <textarea id="sfTexto" rows="4" style="${fieldStyle}">${escapeHtml(conteudo.texto||'')}</textarea>
+      <div class="ms-area-label" style="margin-top:6px;">Cor do texto</div>
+      <select id="sfCor" style="${fieldStyle}">
+        ${['#111111','#1E6FA8','#0E7C6B','#8a7400','#B23A1E','#FFFFFF'].map(c=>`<option value="${c}" ${conteudo.cor===c?'selected':''}>${c}</option>`).join('')}
+      </select>`;
+  } else if (tipo==='url'){
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL</div><input id="sfUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">`;
+  } else if (tipo==='ppt'){
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">Link do Google Apresentações (público)</div><input id="sfLink" value="${escapeAttr(conteudo.link||'')}" placeholder="https://docs.google.com/presentation/d/.../edit" style="${fieldStyle}">`;
+  } else if (tipo==='upload'){
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL da imagem</div><input id="sfImgUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">
+      <div style="font-size:10.5px;color:var(--text-faint);margin-top:4px;">Cole o link de uma imagem já hospedada (Drive público, CDN interno etc). Upload direto de arquivo é o próximo passo de evolução do app.</div>`;
+  } else if (tipo==='comentario'){
+    holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">Texto</div><textarea id="sfComentTexto" rows="3" style="${fieldStyle}">${escapeHtml(conteudo.texto||'')}</textarea>
+      <div class="ms-area-label" style="margin-top:6px;">Cor de fundo</div>
+      <select id="sfComentCor" style="${fieldStyle}">
+        <option value="var(--panel)" ${conteudo.cor==='var(--panel)'?'selected':''}>Neutro</option>
+        <option value="#FFF7CC" ${conteudo.cor==='#FFF7CC'?'selected':''}>Amarelo suave</option>
+        <option value="transparent" ${conteudo.cor==='transparent'?'selected':''}>Transparente</option>
+      </select>`;
+  }
+}
+function saveSlideForm(){
+  const tipo = document.getElementById('sfTipo').value;
+  const titulo = document.getElementById('sfTitulo').value || 'Novo slide';
+  let conteudo = {};
+  if (tipo==='quadro') conteudo = { texto: document.getElementById('sfTexto').value, cor: document.getElementById('sfCor').value };
+  else if (tipo==='url') conteudo = { url: document.getElementById('sfUrl').value };
+  else if (tipo==='ppt') conteudo = { link: document.getElementById('sfLink').value };
+  else if (tipo==='upload') conteudo = { url: document.getElementById('sfImgUrl').value };
+  else if (tipo==='comentario') conteudo = { texto: document.getElementById('sfComentTexto').value, cor: document.getElementById('sfComentCor').value };
+
+  const call = editingSlideId
+    ? apiCall('apiUpdateSlide', { id: editingSlideId, titulo, tipo, conteudo })
+    : apiCall('apiAddSlide', { area: currentArea, titulo, tipo, conteudo });
+
+  call.then(res=>{
+    return apiCall('apiSlides').then(slides=>{ STATE.slides = slides; });
+  }).then(()=>{
+    closeSlideForm(); renderSlideManagerBody(); wireNavigation();
+  }).catch(err=>alert('Erro ao salvar slide: '+err));
+}
+
+/* ====================================================================
+   TEXTOS EDITÁVEIS INLINE (títulos e notas dos slides fixos) — bug #4
+   ==================================================================== */
+function applyEditableNotes(){
+  const isAdmin = !!(STATE.whoami && STATE.whoami.isAdmin);
+  document.querySelectorAll('.editable-title, .editable-note').forEach(el=>{
+    const slideEl = el.closest('.slide');
+    const slideId = slideEl ? slideEl.dataset.slide : null;
+    const s = STATE.slides.find(x=>x.id===slideId);
+
+    // preenche o valor salvo (senão mantém o texto de exemplo do HTML)
+    if (s){
+      if (el.classList.contains('editable-title') && s.titulo) {
+        el.textContent = s.titulo;
+      }
+      if (el.classList.contains('editable-note')) {
+        const key = el.dataset.notekey;
+        const val = (s.conteudo || {})[key];
+        if (val !== undefined) { if ('value' in el) el.value = val; else el.textContent = val; }
+      }
+    }
+
+    if (!isAdmin || !slideId) return;
+    if ('value' in el) { el.readOnly = false; } else { el.setAttribute('contenteditable','true'); }
+    el.addEventListener('blur', ()=>{
+      const value = ('value' in el) ? el.value : el.textContent;
+      if (el.classList.contains('editable-title')) {
+        apiCall('apiUpdateSlide', { id: slideId, titulo: value }).catch(err=>console.error(err));
+      } else {
+        const patch = {}; patch[el.dataset.notekey] = value;
+        apiCall('apiUpdateSlide', { id: slideId, conteudo: patch }).catch(err=>console.error(err));
+      }
+    });
+  });
+}
+
+/* ====================================================================
+   AÇÕES & COMENTÁRIOS — painel lateral
+   ==================================================================== */
+function getMeuNome(){ return localStorage.getItem('weeklyNome') || ''; }
+function setMeuNome(nome){ if (nome) localStorage.setItem('weeklyNome', nome); }
+
+function openSide(area, slideId, tab){
+  currentArea = area; currentSlideForPanel = slideId;
+  document.getElementById('spArea').textContent = area;
+  document.getElementById('acaoNome').value = getMeuNome();
+  document.getElementById('comentNome').value = getMeuNome();
+  setTab(tab || 'acao');
+  renderHistory(area);
+  document.getElementById('sidePanel').classList.add('open');
+}
+function closeSide(){ document.getElementById('sidePanel').classList.remove('open'); }
+function setTab(tab){
+  document.querySelectorAll('.sp-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('formAcao').style.display = tab==='acao' ? 'flex':'none';
+  document.getElementById('formComentario').style.display = tab==='comentario' ? 'flex':'none';
+}
+function renderHistory(area){
+  const box = document.getElementById('spHistory');
+  const acoes = (STATE.acoes||[]).filter(a=>a['Área']===area).map(a=>({ tipo:'action', data:a['Data'], titulo:a['Descrição'], texto:a['Comentario'], atual:a['Atual'], meta:a['Meta'], id:a['ID Unico'], concluido: a['Concluido?']===true }));
+  const comentarios = (STATE.comentarios||[]).filter(c=>c['Área']===area).map(c=>({ tipo:'comment', data:c['Data'], titulo:'💬 Comentário', texto:c['Comentario'], id:c['ID Unico'] }));
+  const all = acoes.concat(comentarios).sort((a,b)=> new Date(b.data) - new Date(a.data));
+  if (!all.length){ box.innerHTML = '<div style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px 0;">Nenhum registro ainda nesta área.</div>'; return; }
+  box.innerHTML = all.map(item => `
+    <div class="hist-card ${item.tipo}">
+      <div class="hist-top"><span>${formatDate(item.data)}</span><span>${item.id||''}</span></div>
+      <div class="hist-title">${escapeHtml(item.titulo)}</div>
+      <div>${escapeHtml(item.texto)}</div>
+      ${item.tipo==='action' ? `<div class="hist-meta"><span>Atual: ${escapeHtml(item.atual)}</span><span>Meta: ${escapeHtml(item.meta)}</span></div>
+        <div class="hist-done ${item.concluido?'':'pending'}" ${item.concluido?'':`data-action="toggleConcluido" data-a="${item.id}"`}>${item.concluido?'✓ Concluído':'Marcar como concluído'}</div>` : ''}
+    </div>`).join('');
+}
+function formatDate(d){
+  try{ const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); } catch(e){ return d||''; }
+}
+function toggleConcluido(id){
+  apiCall('apiUpdateAcao', { id, concluido:true }).then(()=>{
+    const a = STATE.acoes.find(x=>x['ID Unico']===id); if (a) a['Concluido?'] = true;
+    renderHistory(currentArea);
+  }).catch(err=>alert('Erro ao concluir: '+err));
+}
+function submitAcao(){
+  const atual = document.getElementById('acaoAtual').value.trim();
+  const errBox = document.getElementById('acaoError');
+  if (!atual){ errBox.textContent = 'Preencha "Atual" — é obrigatório.'; errBox.style.display='block'; return; }
+  errBox.style.display='none';
+  const nome = document.getElementById('acaoNome').value.trim() || 'anônimo';
+  setMeuNome(nome);
+  const body = {
+    area: currentArea, slide: currentSlideForPanel, nome,
+    atual, meta: document.getElementById('acaoMeta').value,
+    descricao: document.getElementById('acaoDescricao').value,
+    comentario: document.getElementById('acaoComentario').value
+  };
+  apiCall('apiAddAcao', body).then(()=>apiCall('apiAcoes')).then(acoes=>{
+    STATE.acoes = acoes;
+    ['acaoAtual','acaoMeta','acaoDescricao','acaoComentario'].forEach(id=>document.getElementById(id).value='');
+    renderHistory(currentArea);
+  }).catch(err=>{ errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
+}
+function submitComentario(){
+  const texto = document.getElementById('comentTexto').value.trim();
+  const errBox = document.getElementById('comentError');
+  if (!texto){ errBox.textContent = 'Escreva um comentário antes de salvar.'; errBox.style.display='block'; return; }
+  errBox.style.display='none';
+  const nome = document.getElementById('comentNome').value.trim() || 'anônimo';
+  setMeuNome(nome);
+  apiCall('apiAddComentario', { area: currentArea, slide: currentSlideForPanel, nome, comentario: texto })
+    .then(()=>apiCall('apiComentarios')).then(comentarios=>{
+      STATE.comentarios = comentarios;
+      document.getElementById('comentTexto').value = '';
+      renderHistory(currentArea);
+    }).catch(err=>{ errBox.textContent = 'Erro ao salvar: '+err; errBox.style.display='block'; });
+}
+
+/* ====================================================================
+   TURNO (capa)
+   ==================================================================== */
+document.querySelectorAll('.turno-pill').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    document.querySelectorAll('.turno-pill').forEach(x=>x.classList.remove('active'));
+    p.classList.add('active');
+    document.getElementById('turnoLabel').textContent = p.dataset.turno;
+    document.getElementById('turnoBadgeTop').textContent = p.dataset.turno.toUpperCase();
+  });
+});
+
+/* ====================================================================
+   DADOS REAIS — leitura do Scorecard (Code.gs já devolve soma E média
+   por semana; aqui a gente escolhe qual usar por indicador)
+   ==================================================================== */
+const INDICATOR_CONFIG = {
+  'Ocorrencias Abertas': { mode:'sum', scale:1 },
+  'Desvios em Aberto': { mode:'sum', scale:1 },
+  'Volume Real': { mode:'sum', scale:1 },
+  'Plano vs Volume Real': { mode:'sum', scale:1 },
+  'Ociosidade': { mode:'avg', scale:100 },
+  'Abs Geral': { mode:'avg', scale:100 },
+  'DOT': { mode:'avg', scale:1 },
+  'OOT': { mode:'avg', scale:1 },
+  'Pacotes Perdidos': { mode:'sum', scale:1 }
+};
+function pickIndicator(indicador, area, turno){
+  return (STATE.scorecard||[]).find(r=> r.indicador===indicador && r.area===area && r.turno===turno);
+}
+function lastWeeks(weekObj, n){
+  const keys = Object.keys(weekObj||{}).sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10));
+  return keys.slice(-n);
+}
+function seriesFor(indicador, area, turno){
+  const cfg = INDICATOR_CONFIG[indicador] || { mode:'sum', scale:1 };
+  const row = pickIndicator(indicador, area, turno);
+  if (!row) return { weeks:[], values:[] };
+  const src = cfg.mode==='sum' ? row.weekly_sum : row.weekly_avg;
+  const weeks = lastWeeks(src, 4);
+  return { weeks, values: weeks.map(w => src[w]!==undefined ? Math.round(src[w]*cfg.scale*10)/10 : null) };
+}
+function setWeekRange(elId, weeks){
+  const el = document.getElementById(elId);
+  if (el && weeks.length) el.textContent = weeks[0] + (weeks.length>1 ? '–'+weeks[weeks.length-1] : '');
+}
+
+/* ====================================================================
+   CHART.JS — helpers genéricos
+   ==================================================================== */
+Chart.defaults.font.family = "'Inter',sans-serif";
+Chart.defaults.color = '#63625C';
+Chart.defaults.font.size = 11;
+const GRID = { color:'#ECECE6' };
+const AXIS_BASE = { grid:GRID, ticks:{color:'#8a8a83'}, border:{color:'#E3E3DC'} };
+
+function mkChart(canvasId, config){
+  if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  chartInstances[canvasId] = new Chart(el, config);
+}
+function legendOpts(){ return { position:'bottom', labels:{ boxWidth:8, boxHeight:8, usePointStyle:true } }; }
+
+function multiLineChart(canvasId, labels, series, pct){
+  mkChart(canvasId, { type:'line',
+    data:{ labels, datasets: series.map(s=>({ label:s.label, data:s.data, borderColor:s.color, backgroundColor:s.color, tension:.35, pointRadius:3, borderWidth:2 })) },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
+      scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }) } } });
+}
+function groupedBarChart(canvasId, labels, series, pct){
+  mkChart(canvasId, { type:'bar',
+    data:{ labels, datasets: series.map(s=>({ label:s.label, data:s.data, backgroundColor:s.color, borderRadius:5, maxBarThickness:26 })) },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
+      scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }) } } });
+}
+function barLineChart(canvasId, labels, bars, lines){
+  mkChart(canvasId, { data:{ labels, datasets:[
+      { type:'bar', label:'Total', data:bars, backgroundColor:'#11111122', borderRadius:6, order:3, maxBarThickness:40 },
+      ...lines.map((l,i)=>({ type:'line', label:l.label, data:l.data, borderColor:l.color, tension:.3, pointRadius:3, order:1, borderWidth: i===lines.length-1?3:2 }))
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() }, scales:{ x:AXIS_BASE, y:AXIS_BASE } } });
+}
+function paretoChart(canvasId, labels, values){
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  let acc=0; const cum = values.map(v=>{ acc+=v; return +(acc/total*100).toFixed(1); });
+  mkChart(canvasId, { data:{ labels, datasets:[
+      { type:'bar', label:'Casos', data:values, backgroundColor:'#111111', borderRadius:5, order:2, yAxisID:'y' },
+      { type:'line', label:'Acumulado %', data:cum, borderColor:'#E6C200', backgroundColor:'#E6C200', tension:.3, pointRadius:3, borderWidth:3, order:1, yAxisID:'y1' }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
+      scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{position:'left'}), y1:{ position:'right', min:0, max:100, grid:{display:false}, ticks:{color:'#8a8a83', callback:v=>v+'%'} } } } });
+}
+function horizontalBar(canvasId, labels, values, color, pct){
+  mkChart(canvasId, { type:'bar', data:{ labels, datasets:[{ label:'% atual', data:values, backgroundColor:color, borderRadius:5, maxBarThickness:20 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
+      scales:{ x:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }), y:AXIS_BASE } } });
+}
+
+/* ====================================================================
+   MONTAGEM DE CADA GRÁFICO A PARTIR DO STATE.scorecard (dado real)
+   ==================================================================== */
+function renderAllCharts(){
+  // ---- Safety ----
+  const ocGeral = seriesFor('Ocorrencias Abertas','Safety','Geral');
+  const ocT1 = seriesFor('Ocorrencias Abertas','Safety','T1');
+  const ocT2 = seriesFor('Ocorrencias Abertas','Safety','T2');
+  const ocT3 = seriesFor('Ocorrencias Abertas','Safety','T3');
+  barLineChart('chartOcorrencias', ocGeral.weeks, ocGeral.values, [
+    { label:'T1', data:ocT1.values, color:'#C9C9C0' }, { label:'T2', data:ocT2.values, color:'#8C8C86' }, { label:'T3', data:ocT3.values, color:'#E6C200' }
+  ]);
+  setWeekRange('weekRangeSafety1', ocGeral.weeks);
+
+  const dvGeral = seriesFor('Desvios em Aberto','Safety','Geral');
+  const dvT1 = seriesFor('Desvios em Aberto','Safety','T1');
+  const dvT2 = seriesFor('Desvios em Aberto','Safety','T2');
+  const dvT3 = seriesFor('Desvios em Aberto','Safety','T3');
+  barLineChart('chartDesvios', dvGeral.weeks, dvGeral.values, [
+    { label:'T1', data:dvT1.values, color:'#C9C9C0' }, { label:'T2', data:dvT2.values, color:'#8C8C86' }, { label:'T3', data:dvT3.values, color:'#E6C200' }
+  ]);
+  setWeekRange('weekRangeSafety1b', dvGeral.weeks);
+
+  // Paretos de Safety continuam fictícios — [She] Ocorrencias / Desvios ainda vazias na planilha.
+  paretoChart('chartParetoOcorrencias', ['Queda de material','EPI incompleto','Piso molhado','Empilhadeira','Sinalização','Outros'], [24,18,12,9,6,4]);
+  paretoChart('chartParetoDesvios', ['Procedimento não seguido','Falta de sinalização','Área desorganizada','Ferramenta inadequada','Outros'], [19,14,10,7,3]);
+
+  // ---- Flow ----
+  const volGeral = seriesFor('Volume Real','Flow','Geral');
+  const volT1 = seriesFor('Volume Real','Flow','T1');
+  const volT2 = seriesFor('Volume Real','Flow','T2');
+  const volT3 = seriesFor('Volume Real','Flow','T3');
+  mkChart('chartVolume', { data:{ labels:volGeral.weeks, datasets:[
+      { type:'bar', label:'T1', data:volT1.values, backgroundColor:'#C9C9C0', borderRadius:5, stack:'v', maxBarThickness:50 },
+      { type:'bar', label:'T2', data:volT2.values, backgroundColor:'#111111', borderRadius:5, stack:'v', maxBarThickness:50 },
+      { type:'bar', label:'T3', data:volT3.values, backgroundColor:'#5A5A55', borderRadius:5, stack:'v', maxBarThickness:50 },
+      { type:'line', label:'Total', data:volGeral.values, borderColor:'#E6C200', backgroundColor:'#E6C200', tension:.3, pointRadius:4, borderWidth:3, order:0 }
+    ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:legendOpts()}, scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{stacked:true}) } } });
+  setWeekRange('weekRangeFlow1', volGeral.weeks);
+
+  const planoGeral = seriesFor('Plano vs Volume Real','Flow','Geral');
+  groupedBarChart('chartPlano', planoGeral.weeks, [
+    { label:'Plano', data:planoGeral.values, color:'#C9C9C0' },
+    { label:'Real', data:volGeral.values, color:'#111111' }
+  ]);
+  setWeekRange('weekRangeFlow2a', planoGeral.weeks);
+
+  const ocioGeral = seriesFor('Ociosidade','Flow','Geral');
+  const ocioT1 = seriesFor('Ociosidade','Flow','T1');
+  const ocioT2 = seriesFor('Ociosidade','Flow','T2');
+  const ocioT3 = seriesFor('Ociosidade','Flow','T3');
+  multiLineChart('chartOciosidade', ocioGeral.weeks, [
+    { label:'Geral', data:ocioGeral.values, color:'#111111' }, { label:'T1', data:ocioT1.values, color:'#E6C200' },
+    { label:'T2', data:ocioT2.values, color:'#8C8C86' }, { label:'T3', data:ocioT3.values, color:'#C9C9C0' }
+  ], true);
+  setWeekRange('weekRangeFlow2b', ocioGeral.weeks);
+
+  // ---- Abs ----
+  const absGeral = seriesFor('Abs Geral','Abs','Geral');
+  const absT1 = seriesFor('Abs Geral','Abs','T1');
+  const absT2 = seriesFor('Abs Geral','Abs','T2');
+  const absT3 = seriesFor('Abs Geral','Abs','T3');
+  multiLineChart('chartAbsGeral', absGeral.weeks, [
+    { label:'Geral', data:absGeral.values, color:'#111111' }, { label:'T1', data:absT1.values, color:'#E6C200' },
+    { label:'T2', data:absT2.values, color:'#8C8C86' }, { label:'T3', data:absT3.values, color:'#C9C9C0' }
+  ], true);
+  setWeekRange('weekRangeAbs1', absGeral.weeks);
+
+  const ofensorRows = (STATE.abs_ofensor||[]).filter(r=>r.TURNO==='ALL' && r.OFENSOR!=='ABS Geral (total)').sort((a,b)=>b.PERCENTUAL_ATUAL-a.PERCENTUAL_ATUAL);
+  horizontalBar('chartAbsOfensor', ofensorRows.map(r=>r.OFENSOR), ofensorRows.map(r=>r.PERCENTUAL_ATUAL), '#111111', true);
+  const areaRows = (STATE.abs_area||[]).filter(r=>r.TURNO==='ALL').sort((a,b)=>b.PERCENTUAL_ATUAL-a.PERCENTUAL_ATUAL);
+  horizontalBar('chartAbsArea', areaRows.map(r=>r.AREA), areaRows.map(r=>r.PERCENTUAL_ATUAL), '#E6C200', true);
+
+  // ---- Prod ----
+  const dotGeral = seriesFor('DOT','Prod','Geral'), dotT1 = seriesFor('DOT','Prod','T1'), dotT2 = seriesFor('DOT','Prod','T2'), dotT3 = seriesFor('DOT','Prod','T3');
+  groupedBarChart('chartDOT', dotGeral.weeks, [
+    { label:'Geral', data:dotGeral.values, color:'#111111' }, { label:'T1', data:dotT1.values, color:'#E6C200' },
+    { label:'T2', data:dotT2.values, color:'#8C8C86' }, { label:'T3', data:dotT3.values, color:'#C9C9C0' }
+  ], true);
+  setWeekRange('weekRangeProd1a', dotGeral.weeks);
+
+  const ootGeral = seriesFor('OOT','Prod','Geral'), ootT1 = seriesFor('OOT','Prod','T1'), ootT2 = seriesFor('OOT','Prod','T2'), ootT3 = seriesFor('OOT','Prod','T3');
+  groupedBarChart('chartOOT', ootGeral.weeks, [
+    { label:'Geral', data:ootGeral.values, color:'#111111' }, { label:'T1', data:ootT1.values, color:'#E6C200' },
+    { label:'T2', data:ootT2.values, color:'#8C8C86' }, { label:'T3', data:ootT3.values, color:'#C9C9C0' }
+  ], true);
+  setWeekRange('weekRangeProd1b', ootGeral.weeks);
+}
+</script>
+</body>
+</html>
