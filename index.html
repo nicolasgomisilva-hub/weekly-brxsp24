@@ -345,6 +345,14 @@ body{
 .ms-slide.dragover{border-color:var(--accent); background:#FFFBE0;}
 .ms-slide .del-btn{color:#A03636; cursor:pointer; margin-left:6px;}
 
+.geral-btn{
+  font-size:9.5px; font-family:'IBM Plex Mono'; padding:3px 8px; border-radius:12px;
+  border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim); cursor:pointer;
+  white-space:nowrap;
+}
+.geral-btn.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:700; }
+
+
 /* logo oficial — só no canto inferior direito de cada slide, em tamanho de
    marca (não mais um watermark apagado). Maior na capa (ver .cover-slide .wm). */
 .wm{
@@ -382,7 +390,7 @@ body{
         <span class="shape s1"></span><span class="shape s2"></span><span class="shape s3"></span>
       </div>
       <div class="cover-content">
-        <div class="cover-week">SEMANA ANTERIOR · W35 · 24–30 AGO 2026</div>
+        <div class="cover-week" id="coverWeekLabel">SEMANA ANTERIOR · W35 · 24–30 AGO 2026</div>
         <h1 class="cover-title">Weekly<br>XSP24</h1>
         <div class="cover-sub">Selecione o turno para carregar o recorte da apresentação</div>
         <div class="turno-row">
@@ -473,7 +481,7 @@ body{
           <div class="card-head">
             <h3>Ocorrências Abertas</h3>
             <div style="display:flex;gap:8px;align-items:center;">
-              <span class="card-headnote" id="weekRangeSafety1"></span>
+              <span class="card-headnote" id="weekRangeSafety1"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartOcorrencias">Geral</button>
               <div class="toggle-net" data-action="toggleOn" title="Alternar NET vs. semana anterior">⇄</div>
             </div>
           </div>
@@ -489,7 +497,7 @@ body{
           <div class="card-head">
             <h3>Desvios em Aberto</h3>
             <div style="display:flex;gap:8px;align-items:center;">
-              <span class="card-headnote" id="weekRangeSafety1b"></span>
+              <span class="card-headnote" id="weekRangeSafety1b"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartDesvios">Geral</button>
               <div class="toggle-net" data-action="toggleOn" title="Alternar NET vs. semana anterior">⇄</div>
             </div>
           </div>
@@ -565,7 +573,7 @@ body{
       <p class="slide-sub">Fonte: aba Scorecard · pacotes expedidos, últimas 4 semanas (dado real)</p>
       <div class="grid-main-side">
         <div class="card">
-          <div class="card-head"><h3>Pacotes expedidos por turno</h3><span class="card-headnote" id="weekRangeFlow1"></span></div>
+          <div class="card-head"><h3>Pacotes expedidos por turno</h3><span class="card-headnote" id="weekRangeFlow1"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartVolume">Geral</button></div>
           <div class="card-body"><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
         </div>
         <div class="card">
@@ -592,11 +600,11 @@ body{
       <p class="slide-sub">Fonte: aba Scorecard · dado real</p>
       <div class="stack">
         <div class="card" style="flex:1;">
-          <div class="card-head"><h3>Plano vs. Volume Real</h3><span class="card-headnote" id="weekRangeFlow2a"></span></div>
+          <div class="card-head"><h3>Plano vs. Volume Real</h3><span class="card-headnote" id="weekRangeFlow2a"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartPlano">Geral</button></div>
           <div class="card-body"><div class="chart-wrap"><canvas id="chartPlano"></canvas></div></div>
         </div>
         <div class="card" style="flex:1;">
-          <div class="card-head"><h3>Ociosidade</h3><span class="card-headnote" id="weekRangeFlow2b"></span></div>
+          <div class="card-head"><h3>Ociosidade</h3><span class="card-headnote" id="weekRangeFlow2b"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartOciosidade">Geral</button></div>
           <div class="card-body"><div class="chart-wrap"><canvas id="chartOciosidade"></canvas></div></div>
         </div>
       </div>
@@ -619,16 +627,16 @@ body{
       <p class="slide-sub">Fonte: aba Scorecard (ABS Geral) + ABS Por Ofensor / ABS Por Área · dado real</p>
       <div class="stack" style="gap:14px;">
         <div class="card" style="flex:1.1;">
-          <div class="card-head"><h3>ABS Geral</h3><span class="card-headnote" id="weekRangeAbs1"></span></div>
+          <div class="card-head"><h3>ABS Geral</h3><span class="card-headnote" id="weekRangeAbs1"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartAbsGeral">Geral</button></div>
           <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsGeral"></canvas></div></div>
         </div>
         <div class="grid2" style="flex:1;">
           <div class="card">
-            <div class="card-head"><h3>Pareto por ofensor</h3><span class="card-headnote">29/08 vs 22/08</span></div>
+            <div class="card-head"><h3>Pareto por ofensor</h3><button class="geral-btn" data-action="toggleGeral" data-a="chartAbsOfensor">Geral</button></div>
             <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsOfensor"></canvas></div></div>
           </div>
           <div class="card">
-            <div class="card-head"><h3>Pareto por área</h3><span class="card-headnote">29/08 vs 22/08</span></div>
+            <div class="card-head"><h3>Pareto por área</h3><button class="geral-btn" data-action="toggleGeral" data-a="chartAbsArea">Geral</button></div>
             <div class="card-body"><div class="chart-wrap"><canvas id="chartAbsArea"></canvas></div></div>
           </div>
         </div>
@@ -653,11 +661,11 @@ body{
       <div class="grid-main-side">
         <div class="stack">
           <div class="card" style="flex:1;">
-            <div class="card-head"><h3>DOT</h3><span class="card-headnote" id="weekRangeProd1a"></span></div>
+            <div class="card-head"><h3>DOT</h3><span class="card-headnote" id="weekRangeProd1a"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartDOT">Geral</button></div>
             <div class="card-body"><div class="chart-wrap"><canvas id="chartDOT"></canvas></div></div>
           </div>
           <div class="card" style="flex:1;">
-            <div class="card-head"><h3>OOT</h3><span class="card-headnote" id="weekRangeProd1b"></span></div>
+            <div class="card-head"><h3>OOT</h3><span class="card-headnote" id="weekRangeProd1b"></span><button class="geral-btn" data-action="toggleGeral" data-a="chartOOT">Geral</button></div>
             <div class="card-body"><div class="chart-wrap"><canvas id="chartOOT"></canvas></div></div>
           </div>
         </div>
@@ -833,6 +841,12 @@ document.addEventListener('click', function(e){
     case 'setVis': setVis(a, b); break;
     case 'openSlideForm': openSlideForm(a || null); break;
     case 'removeSlide': removeSlide(a); break;
+    case 'toggleGeral': {
+      chartOverrides[a] = !chartOverrides[a];
+      el.classList.toggle('active', !!chartOverrides[a]);
+      renderAllCharts();
+      break;
+    }
     case 'toggleConcluido': toggleConcluido(a); break;
   }
 });
@@ -953,6 +967,8 @@ function apiCall(fnName, payload){
    ==================================================================== */
 let STATE = { whoami:{email:'',isAdmin:false}, scorecard:[], abs_ofensor:[], abs_area:[], acoes:[], comentarios:[], slides:[] };
 let currentArea = null;
+let currentTurno = 'Todos'; // turno selecionado na capa — filtra a apresentação inteira
+const chartOverrides = {}; // canvasId -> true quando o botão "Geral" daquele gráfico está ativo
 let currentSlideForPanel = null;
 let editingSlideId = null; // slide sendo editado no slideForm (null = criando novo)
 const AREA_ORDER = ['Safety','Flow','Abs','Prod','Qualidade'];
@@ -1104,8 +1120,14 @@ document.addEventListener('click', function(e){
 /* ====================================================================
    NAVEGAÇÃO — slide fixo + móvel juntos, ordenados por "ordem"
    ==================================================================== */
+// slide "aparece" pro turno atual se ele foi marcado "Todos" (genérico) ou
+// se o turno dele bate com o selecionado na capa — slides fixos são
+// sempre "Todos" então nunca são afetados por essa regra.
+function matchesTurno(slideTurno){
+  return currentTurno === 'Todos' || !slideTurno || slideTurno === 'Todos' || slideTurno === currentTurno;
+}
 function visibleSlidesForArea(area){
-  return STATE.slides.filter(s => s.area === area && s.visibilidade !== 'oculto').sort((a,b)=>a.ordem-b.ordem);
+  return STATE.slides.filter(s => s.area === area && s.visibilidade !== 'oculto' && matchesTurno(s.turno)).sort((a,b)=>a.ordem-b.ordem);
 }
 function allSlidesForArea(area){
   return STATE.slides.filter(s => s.area === area).sort((a,b)=>a.ordem-b.ordem);
@@ -1333,7 +1355,7 @@ function saveSlideForm(){
 
   const call = editingSlideId
     ? apiCall('apiUpdateSlide', { id: editingSlideId, titulo, tipo, conteudo })
-    : apiCall('apiAddSlide', { area: currentArea, titulo, tipo, conteudo });
+    : apiCall('apiAddSlide', { area: currentArea, titulo, tipo, conteudo, turno: currentTurno });
 
   call.then(res=>{
     return apiCall('apiSlides').then(slides=>{ STATE.slides = slides; });
@@ -1401,13 +1423,14 @@ function setTab(tab){
 }
 function renderHistory(area){
   const box = document.getElementById('spHistory');
-  const acoes = (STATE.acoes||[]).filter(a=>a['Área']===area).map(a=>({ tipo:'action', data:a['Data'], titulo:a['Descrição'], texto:a['Comentario'], atual:a['Atual'], meta:a['Meta'], id:a['ID Unico'], concluido: a['Concluido?']===true }));
-  const comentarios = (STATE.comentarios||[]).filter(c=>c['Área']===area).map(c=>({ tipo:'comment', data:c['Data'], titulo:'💬 Comentário', texto:c['Comentario'], id:c['ID Unico'] }));
+  const matchTurno = t => matchesTurno(t);
+  const acoes = (STATE.acoes||[]).filter(a=>a['Área']===area && matchTurno(a['Turno'])).map(a=>({ tipo:'action', data:a['Data'], titulo:a['Descrição'], texto:a['Comentario'], atual:a['Atual'], meta:a['Meta'], id:a['ID Unico'], concluido: a['Concluido?']===true, turno:a['Turno'] }));
+  const comentarios = (STATE.comentarios||[]).filter(c=>c['Área']===area && matchTurno(c['Turno'])).map(c=>({ tipo:'comment', data:c['Data'], titulo:'💬 Comentário', texto:c['Comentario'], id:c['ID Unico'], turno:c['Turno'] }));
   const all = acoes.concat(comentarios).sort((a,b)=> new Date(b.data) - new Date(a.data));
-  if (!all.length){ box.innerHTML = '<div style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px 0;">Nenhum registro ainda nesta área.</div>'; return; }
+  if (!all.length){ box.innerHTML = '<div style="text-align:center;color:var(--text-faint);font-size:12px;padding:20px 0;">Nenhum registro ainda nesta área/turno.</div>'; return; }
   box.innerHTML = all.map(item => `
     <div class="hist-card ${item.tipo}">
-      <div class="hist-top"><span>${formatDate(item.data)}</span><span>${item.id||''}</span></div>
+      <div class="hist-top"><span>${formatDate(item.data)} · ${escapeHtml(item.turno||'Todos')}</span><span>${item.id||''}</span></div>
       <div class="hist-title">${escapeHtml(item.titulo)}</div>
       <div>${escapeHtml(item.texto)}</div>
       ${item.tipo==='action' ? `<div class="hist-meta"><span>Atual: ${escapeHtml(item.atual)}</span><span>Meta: ${escapeHtml(item.meta)}</span></div>
@@ -1431,7 +1454,7 @@ function submitAcao(){
   const nome = document.getElementById('acaoNome').value.trim() || 'anônimo';
   setMeuNome(nome);
   const body = {
-    area: currentArea, slide: currentSlideForPanel, nome,
+    area: currentArea, slide: currentSlideForPanel, nome, turno: currentTurno,
     atual, meta: document.getElementById('acaoMeta').value,
     descricao: document.getElementById('acaoDescricao').value,
     comentario: document.getElementById('acaoComentario').value
@@ -1449,7 +1472,7 @@ function submitComentario(){
   errBox.style.display='none';
   const nome = document.getElementById('comentNome').value.trim() || 'anônimo';
   setMeuNome(nome);
-  apiCall('apiAddComentario', { area: currentArea, slide: currentSlideForPanel, nome, comentario: texto })
+  apiCall('apiAddComentario', { area: currentArea, slide: currentSlideForPanel, nome, turno: currentTurno, comentario: texto })
     .then(()=>apiCall('apiComentarios')).then(comentarios=>{
       STATE.comentarios = comentarios;
       document.getElementById('comentTexto').value = '';
@@ -1464,8 +1487,16 @@ document.querySelectorAll('.turno-pill').forEach(p=>{
   p.addEventListener('click', ()=>{
     document.querySelectorAll('.turno-pill').forEach(x=>x.classList.remove('active'));
     p.classList.add('active');
-    document.getElementById('turnoLabel').textContent = p.dataset.turno;
-    document.getElementById('turnoBadgeTop').textContent = p.dataset.turno.toUpperCase();
+    currentTurno = p.dataset.turno;
+    document.getElementById('turnoLabel').textContent = currentTurno;
+    document.getElementById('turnoBadgeTop').textContent = currentTurno.toUpperCase();
+    // trocar turno reseta os "Geral" individuais e refaz todos os gráficos,
+    // além de re-filtrar histórico de ações/comentários e slides móveis
+    Object.keys(chartOverrides).forEach(k=>delete chartOverrides[k]);
+    document.querySelectorAll('.geral-btn.active').forEach(b=>b.classList.remove('active'));
+    renderAllCharts();
+    wireNavigation();
+    if (currentArea) renderHistory(currentArea);
   });
 });
 
@@ -1484,11 +1515,48 @@ const INDICATOR_CONFIG = {
   'OOT': { mode:'avg', scale:1 },
   'Pacotes Perdidos': { mode:'sum', scale:1 }
 };
+
+/* ---- semana anterior completa (domingo→sábado), pra excluir a semana
+   corrente/incompleta dos gráficos e pra montar o texto da capa ---- */
+function getLastCompleteWeek(hoje){
+  const d = new Date(hoje); d.setHours(0,0,0,0);
+  const dow = d.getDay();
+  const thisSunday = new Date(d); thisSunday.setDate(d.getDate() - dow);
+  const lastSaturday = new Date(thisSunday); lastSaturday.setDate(thisSunday.getDate() - 1); lastSaturday.setHours(23,59,59,999);
+  const lastSunday = new Date(thisSunday); lastSunday.setDate(thisSunday.getDate() - 7);
+  return { start: lastSunday, end: lastSaturday };
+}
+function isWeekComplete(weekLabel){
+  const meta = STATE.weekMeta || {};
+  const dateStr = meta[weekLabel];
+  if (!dateStr) return true; // sem metadado de data, não tem como filtrar — deixa passar
+  const { end } = getLastCompleteWeek(new Date());
+  return new Date(dateStr) <= end;
+}
+function updateCoverWeekLabel(){
+  const el = document.getElementById('coverWeekLabel');
+  if (!el) return;
+  const { start, end } = getLastCompleteWeek(new Date());
+  const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  const fmt = d => String(d.getDate()).padStart(2,'0');
+  const rangeTxt = start.getMonth()===end.getMonth()
+    ? `${fmt(start)}–${fmt(end)} ${meses[end.getMonth()]}`
+    : `${fmt(start)} ${meses[start.getMonth()]} – ${fmt(end)} ${meses[end.getMonth()]}`;
+  const allWeeks = new Set();
+  (STATE.scorecard||[]).forEach(r=> Object.keys(r.weekly_sum||{}).forEach(w=>allWeeks.add(w)));
+  const complete = Array.from(allWeeks).filter(isWeekComplete)
+    .sort((a,b)=>parseInt(a.replace('W',''),10)-parseInt(b.replace('W',''),10));
+  const weekLabel = complete.length ? complete[complete.length-1] + ' · ' : '';
+  el.textContent = `SEMANA ANTERIOR · ${weekLabel}${rangeTxt} ${end.getFullYear()}`;
+}
+
 function pickIndicator(indicador, area, turno){
   return (STATE.scorecard||[]).find(r=> r.indicador===indicador && r.area===area && r.turno===turno);
 }
 function lastWeeks(weekObj, n){
-  const keys = Object.keys(weekObj||{}).sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10));
+  const keys = Object.keys(weekObj||{})
+    .filter(isWeekComplete)
+    .sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10));
   return keys.slice(-n);
 }
 function seriesFor(indicador, area, turno){
@@ -1504,6 +1572,12 @@ function setWeekRange(elId, weeks){
   if (el && weeks.length) el.textContent = weeks[0] + (weeks.length>1 ? '–'+weeks[weeks.length-1] : '');
 }
 
+// turno "efetivo" de um gráfico: segue o turno global, a menos que esse
+// gráfico específico tenha o botão "Geral" ativado (override individual)
+function effectiveTurno(canvasId){
+  return chartOverrides[canvasId] ? 'Todos' : currentTurno;
+}
+
 /* ====================================================================
    CHART.JS — helpers genéricos
    ==================================================================== */
@@ -1512,6 +1586,39 @@ Chart.defaults.color = '#63625C';
 Chart.defaults.font.size = 11;
 const GRID = { color:'#ECECE6' };
 const AXIS_BASE = { grid:GRID, ticks:{color:'#8a8a83'}, border:{color:'#E3E3DC'} };
+const TURNO_COLORS = { Geral:'#111111', T1:'#E6C200', T2:'#8C8C86', T3:'#C9C9C0' };
+
+// Plugin próprio de rótulo de dados — desenha o valor em cima (barra
+// vertical) ou ao lado (barra horizontal) de cada barra. Registrado uma
+// vez, globalmente, então vale pra todo gráfico de barra do app.
+const dataLabelsPlugin = {
+  id: 'dataLabelsSimple',
+  afterDatasetsDraw(chart){
+    const isHorizontal = chart.options && chart.options.indexAxis === 'y';
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+      if (meta.hidden || meta.type !== 'bar') return;
+      ctx.save();
+      ctx.font = "600 10px 'Inter',sans-serif";
+      ctx.fillStyle = '#111111';
+      meta.data.forEach((el, idx) => {
+        const value = dataset.data[idx];
+        if (value === null || value === undefined) return;
+        const txt = (Math.round(value*10)/10).toString();
+        if (isHorizontal){
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(txt, el.x + 5, el.y);
+        } else {
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          ctx.fillText(txt, el.x, el.y - 3);
+        }
+      });
+      ctx.restore();
+    });
+  }
+};
+Chart.register(dataLabelsPlugin);
 
 function mkChart(canvasId, config){
   if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
@@ -1533,6 +1640,9 @@ function groupedBarChart(canvasId, labels, series, pct){
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }) } } });
 }
+// bar = Total/Geral (sempre) + linha(s) = turno(s) — usado pra Ocorrências,
+// Desvios, Volume Total e (agora) Abs Geral. Quando um turno específico
+// está selecionado, mostra só a linha daquele turno; em "Todos", T1+T2+T3.
 function barLineChart(canvasId, labels, bars, lines){
   mkChart(canvasId, { data:{ labels, datasets:[
       { type:'bar', label:'Total', data:bars, backgroundColor:'#11111122', borderRadius:6, order:3, maxBarThickness:40 },
@@ -1558,92 +1668,114 @@ function horizontalBar(canvasId, labels, values, color, pct){
 
 /* ====================================================================
    MONTAGEM DE CADA GRÁFICO A PARTIR DO STATE.scorecard (dado real)
+   Todo gráfico agora respeita o turno global (currentTurno) OU o
+   "Geral" individual daquele card (chartOverrides), via effectiveTurno().
    ==================================================================== */
+
+// bar=Total(Geral) + linha(s) do(s) turno(s) — Ocorrências/Desvios/AbsGeral/Volume
+function renderComboBarLinha(canvasId, indicador, area, weekRangeId){
+  const eff = effectiveTurno(canvasId);
+  const geral = seriesFor(indicador, area, 'Geral');
+  const lines = eff === 'Todos'
+    ? ['T1','T2','T3'].map(t=>({ label:t, data: seriesFor(indicador,area,t).values, color: TURNO_COLORS[t] }))
+    : [{ label: eff, data: seriesFor(indicador,area,eff).values, color: TURNO_COLORS[eff] || '#E6C200' }];
+  barLineChart(canvasId, geral.weeks, geral.values, lines);
+  if (weekRangeId) setWeekRange(weekRangeId, geral.weeks);
+}
+
+// barra por turno, sem linha — DOT/OOT
+function renderGroupedTurno(canvasId, indicador, area, weekRangeId, pct){
+  const eff = effectiveTurno(canvasId);
+  if (eff === 'Todos'){
+    const g = seriesFor(indicador,area,'Geral');
+    const series = ['Geral','T1','T2','T3'].map(t=>({ label:t, data: seriesFor(indicador,area,t).values, color: TURNO_COLORS[t] }));
+    groupedBarChart(canvasId, g.weeks, series, pct);
+    if (weekRangeId) setWeekRange(weekRangeId, g.weeks);
+  } else {
+    const s = seriesFor(indicador, area, eff);
+    groupedBarChart(canvasId, s.weeks, [{ label:eff, data:s.values, color: TURNO_COLORS[eff] || '#111111' }], pct);
+    if (weekRangeId) setWeekRange(weekRangeId, s.weeks);
+  }
+}
+
+// multi-linha, sem barra — Ociosidade
+function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
+  const eff = effectiveTurno(canvasId);
+  if (eff === 'Todos'){
+    const g = seriesFor(indicador,area,'Geral');
+    const series = ['Geral','T1','T2','T3'].map(t=>({ label:t, data: seriesFor(indicador,area,t).values, color: TURNO_COLORS[t] }));
+    multiLineChart(canvasId, g.weeks, series, pct);
+    if (weekRangeId) setWeekRange(weekRangeId, g.weeks);
+  } else {
+    const s = seriesFor(indicador, area, eff);
+    multiLineChart(canvasId, s.weeks, [{ label:eff, data:s.values, color: TURNO_COLORS[eff] || '#111111' }], pct);
+    if (weekRangeId) setWeekRange(weekRangeId, s.weeks);
+  }
+}
+
+function renderPlanoChart(){
+  const eff = effectiveTurno('chartPlano');
+  const t = eff === 'Todos' ? 'Geral' : eff;
+  const plano = seriesFor('Plano vs Volume Real','Flow', t);
+  const real = seriesFor('Volume Real','Flow', t);
+  groupedBarChart('chartPlano', plano.weeks, [
+    { label:'Plano', data:plano.values, color:'#C9C9C0' },
+    { label:'Real', data:real.values, color:'#111111' }
+  ]);
+  setWeekRange('weekRangeFlow2a', plano.weeks);
+}
+
+function renderAbsPareto(canvasId, fonte, labelField, color){
+  const eff = effectiveTurno(canvasId);
+  const filtroTurno = eff === 'Todos' ? 'ALL' : eff;
+  const rows = (fonte||[]).filter(r=>r.TURNO===filtroTurno && r[labelField]!=='ABS Geral (total)')
+    .sort((a,b)=>b.PERCENTUAL_ATUAL-a.PERCENTUAL_ATUAL);
+  horizontalBar(canvasId, rows.map(r=>r[labelField]), rows.map(r=>r.PERCENTUAL_ATUAL), color, true);
+}
+
 function renderAllCharts(){
   // ---- Safety ----
-  const ocGeral = seriesFor('Ocorrencias Abertas','Safety','Geral');
-  const ocT1 = seriesFor('Ocorrencias Abertas','Safety','T1');
-  const ocT2 = seriesFor('Ocorrencias Abertas','Safety','T2');
-  const ocT3 = seriesFor('Ocorrencias Abertas','Safety','T3');
-  barLineChart('chartOcorrencias', ocGeral.weeks, ocGeral.values, [
-    { label:'T1', data:ocT1.values, color:'#C9C9C0' }, { label:'T2', data:ocT2.values, color:'#8C8C86' }, { label:'T3', data:ocT3.values, color:'#E6C200' }
-  ]);
-  setWeekRange('weekRangeSafety1', ocGeral.weeks);
-
-  const dvGeral = seriesFor('Desvios em Aberto','Safety','Geral');
-  const dvT1 = seriesFor('Desvios em Aberto','Safety','T1');
-  const dvT2 = seriesFor('Desvios em Aberto','Safety','T2');
-  const dvT3 = seriesFor('Desvios em Aberto','Safety','T3');
-  barLineChart('chartDesvios', dvGeral.weeks, dvGeral.values, [
-    { label:'T1', data:dvT1.values, color:'#C9C9C0' }, { label:'T2', data:dvT2.values, color:'#8C8C86' }, { label:'T3', data:dvT3.values, color:'#E6C200' }
-  ]);
-  setWeekRange('weekRangeSafety1b', dvGeral.weeks);
+  renderComboBarLinha('chartOcorrencias', 'Ocorrencias Abertas', 'Safety', 'weekRangeSafety1');
+  renderComboBarLinha('chartDesvios', 'Desvios em Aberto', 'Safety', 'weekRangeSafety1b');
 
   // Paretos de Safety continuam fictícios — [She] Ocorrencias / Desvios ainda vazias na planilha.
   paretoChart('chartParetoOcorrencias', ['Queda de material','EPI incompleto','Piso molhado','Empilhadeira','Sinalização','Outros'], [24,18,12,9,6,4]);
   paretoChart('chartParetoDesvios', ['Procedimento não seguido','Falta de sinalização','Área desorganizada','Ferramenta inadequada','Outros'], [19,14,10,7,3]);
 
   // ---- Flow ----
-  const volGeral = seriesFor('Volume Real','Flow','Geral');
-  const volT1 = seriesFor('Volume Real','Flow','T1');
-  const volT2 = seriesFor('Volume Real','Flow','T2');
-  const volT3 = seriesFor('Volume Real','Flow','T3');
-  mkChart('chartVolume', { data:{ labels:volGeral.weeks, datasets:[
-      { type:'bar', label:'T1', data:volT1.values, backgroundColor:'#C9C9C0', borderRadius:5, stack:'v', maxBarThickness:50 },
-      { type:'bar', label:'T2', data:volT2.values, backgroundColor:'#111111', borderRadius:5, stack:'v', maxBarThickness:50 },
-      { type:'bar', label:'T3', data:volT3.values, backgroundColor:'#5A5A55', borderRadius:5, stack:'v', maxBarThickness:50 },
-      { type:'line', label:'Total', data:volGeral.values, borderColor:'#E6C200', backgroundColor:'#E6C200', tension:.3, pointRadius:4, borderWidth:3, order:0 }
-    ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:legendOpts()}, scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{stacked:true}) } } });
-  setWeekRange('weekRangeFlow1', volGeral.weeks);
+  renderComboBarLinha('chartVolume', 'Volume Real', 'Flow', 'weekRangeFlow1');
+  renderPlanoChart();
+  renderMultiLinhaTurno('chartOciosidade', 'Ociosidade', 'Flow', 'weekRangeFlow2b', true);
 
-  const planoGeral = seriesFor('Plano vs Volume Real','Flow','Geral');
-  groupedBarChart('chartPlano', planoGeral.weeks, [
-    { label:'Plano', data:planoGeral.values, color:'#C9C9C0' },
-    { label:'Real', data:volGeral.values, color:'#111111' }
-  ]);
-  setWeekRange('weekRangeFlow2a', planoGeral.weeks);
-
-  const ocioGeral = seriesFor('Ociosidade','Flow','Geral');
-  const ocioT1 = seriesFor('Ociosidade','Flow','T1');
-  const ocioT2 = seriesFor('Ociosidade','Flow','T2');
-  const ocioT3 = seriesFor('Ociosidade','Flow','T3');
-  multiLineChart('chartOciosidade', ocioGeral.weeks, [
-    { label:'Geral', data:ocioGeral.values, color:'#111111' }, { label:'T1', data:ocioT1.values, color:'#E6C200' },
-    { label:'T2', data:ocioT2.values, color:'#8C8C86' }, { label:'T3', data:ocioT3.values, color:'#C9C9C0' }
-  ], true);
-  setWeekRange('weekRangeFlow2b', ocioGeral.weeks);
-
-  // ---- Abs ----
-  const absGeral = seriesFor('Abs Geral','Abs','Geral');
-  const absT1 = seriesFor('Abs Geral','Abs','T1');
-  const absT2 = seriesFor('Abs Geral','Abs','T2');
-  const absT3 = seriesFor('Abs Geral','Abs','T3');
-  multiLineChart('chartAbsGeral', absGeral.weeks, [
-    { label:'Geral', data:absGeral.values, color:'#111111' }, { label:'T1', data:absT1.values, color:'#E6C200' },
-    { label:'T2', data:absT2.values, color:'#8C8C86' }, { label:'T3', data:absT3.values, color:'#C9C9C0' }
-  ], true);
-  setWeekRange('weekRangeAbs1', absGeral.weeks);
-
-  const ofensorRows = (STATE.abs_ofensor||[]).filter(r=>r.TURNO==='ALL' && r.OFENSOR!=='ABS Geral (total)').sort((a,b)=>b.PERCENTUAL_ATUAL-a.PERCENTUAL_ATUAL);
-  horizontalBar('chartAbsOfensor', ofensorRows.map(r=>r.OFENSOR), ofensorRows.map(r=>r.PERCENTUAL_ATUAL), '#111111', true);
-  const areaRows = (STATE.abs_area||[]).filter(r=>r.TURNO==='ALL').sort((a,b)=>b.PERCENTUAL_ATUAL-a.PERCENTUAL_ATUAL);
-  horizontalBar('chartAbsArea', areaRows.map(r=>r.AREA), areaRows.map(r=>r.PERCENTUAL_ATUAL), '#E6C200', true);
+  // ---- Abs ---- (agora barra Total amarela + linha por turno, igual Safety)
+  renderComboBarLinha('chartAbsGeral', 'Abs Geral', 'Abs', 'weekRangeAbs1');
+  renderAbsPareto('chartAbsOfensor', STATE.abs_ofensor, 'OFENSOR', '#111111');
+  renderAbsPareto('chartAbsArea', STATE.abs_area, 'AREA', '#E6C200');
 
   // ---- Prod ----
-  const dotGeral = seriesFor('DOT','Prod','Geral'), dotT1 = seriesFor('DOT','Prod','T1'), dotT2 = seriesFor('DOT','Prod','T2'), dotT3 = seriesFor('DOT','Prod','T3');
-  groupedBarChart('chartDOT', dotGeral.weeks, [
-    { label:'Geral', data:dotGeral.values, color:'#111111' }, { label:'T1', data:dotT1.values, color:'#E6C200' },
-    { label:'T2', data:dotT2.values, color:'#8C8C86' }, { label:'T3', data:dotT3.values, color:'#C9C9C0' }
-  ], true);
-  setWeekRange('weekRangeProd1a', dotGeral.weeks);
+  renderGroupedTurno('chartDOT', 'DOT', 'Prod', 'weekRangeProd1a', true);
+  renderGroupedTurno('chartOOT', 'OOT', 'Prod', 'weekRangeProd1b', true);
 
-  const ootGeral = seriesFor('OOT','Prod','Geral'), ootT1 = seriesFor('OOT','Prod','T1'), ootT2 = seriesFor('OOT','Prod','T2'), ootT3 = seriesFor('OOT','Prod','T3');
-  groupedBarChart('chartOOT', ootGeral.weeks, [
-    { label:'Geral', data:ootGeral.values, color:'#111111' }, { label:'T1', data:ootT1.values, color:'#E6C200' },
-    { label:'T2', data:ootT2.values, color:'#8C8C86' }, { label:'T3', data:ootT3.values, color:'#C9C9C0' }
-  ], true);
-  setWeekRange('weekRangeProd1b', ootGeral.weeks);
+  updateCoverWeekLabel();
 }
+
+/* ====================================================================
+   NAVEGAÇÃO POR TECLADO — seta esquerda/direita troca de slide, igual
+   clicar nas flechinhas do rodapé. Não interfere se a pessoa estiver
+   digitando em algum campo.
+   ==================================================================== */
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) return;
+  const active = document.querySelector('.slide.active');
+  if (!active) return;
+  const arrows = active.querySelectorAll('.bottombar .nav-arrow');
+  if (!arrows.length) return;
+  e.preventDefault();
+  if (e.key === 'ArrowLeft') arrows[0].click();
+  else arrows[arrows.length-1].click();
+});
 </script>
 </body>
 </html>
