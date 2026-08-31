@@ -857,6 +857,16 @@ document.addEventListener('click', function(e){
       el.classList.toggle('active');
       break;
     }
+    case 'addBloco': {
+      sfBlocos.push(a === 'imagem' ? { tipo:'imagem', url:'', borda:false } : { tipo:'texto', texto:'', cor:'#111111', borda:false });
+      renderBlocosList();
+      break;
+    }
+    case 'removeBloco': {
+      sfBlocos.splice(Number(a), 1);
+      renderBlocosList();
+      break;
+    }
     case 'toggleConcluido': toggleConcluido(a); break;
   }
 });
@@ -1253,9 +1263,16 @@ function renderSlideContentHTML(s){
       if (!c.texto) return vazio;
       return `<div style="flex:1;display:flex;align-items:center;justify-content:center;background:${escapeAttr(c.cor||'var(--panel)')};border:1px solid var(--border);border-radius:14px;padding:30px;">
         <p style="font-size:18px;font-family:'Sora';font-weight:600;text-align:center;max-width:70%;">${escapeHtml(c.texto||'')}</p></div>`;
-    default: // 'quadro'
-      if (!c.texto) return vazio;
-      return `<div style="flex:1;padding:20px;color:${escapeAttr(c.cor||'var(--text)')};font-size:16px;line-height:1.6;white-space:pre-wrap;">${escapeHtml(c.texto||'')}</div>`;
+    default: { // 'quadro'
+      const blocos = c.blocos || (c.texto ? [{ tipo:'texto', texto:c.texto, cor:c.cor||'#111111' }] : []);
+      if (!blocos.length) return vazio;
+      return `<div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:22px;">
+        ${blocos.map(b => b.tipo==='imagem'
+          ? `<img src="${escapeAttr(b.url||'')}" style="max-width:100%;border-radius:8px;${b.borda?'border:3px solid #111111;':''}">`
+          : `<div style="font-size:16px;line-height:1.6;white-space:pre-wrap;color:${escapeAttr(b.cor||'#111111')};${b.borda?'border:2px solid '+escapeAttr(b.cor||'#111111')+';border-radius:8px;padding:14px;':''}">${escapeHtml(b.texto||'')}</div>`
+        ).join('')}
+      </div>`;
+    }
   }
 }
 function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
@@ -1349,6 +1366,8 @@ function removeSlide(id){
 }
 
 /* ---- form de criar/editar slide móvel ---- */
+let sfBlocos = []; // blocos do "quadro em branco" sendo editado agora (array de {tipo,texto/url,cor,borda})
+
 function openSlideForm(id){
   editingSlideId = id;
   const s = id ? STATE.slides.find(x=>x.id===id) : null;
@@ -1356,10 +1375,15 @@ function openSlideForm(id){
   document.getElementById('sfArea').value = currentArea;
   document.getElementById('sfTitulo').value = s ? s.titulo : '';
   document.getElementById('sfTipo').value = s ? s.tipo : 'quadro';
-  renderSlideFormFields(s ? s.conteudo : {});
+  const conteudo = s ? s.conteudo : {};
+  // migra formato antigo (texto único) pra um bloco, se for o caso
+  sfBlocos = conteudo.blocos ? conteudo.blocos.map(b=>Object.assign({},b))
+    : (conteudo.texto ? [{ tipo:'texto', texto:conteudo.texto, cor:conteudo.cor||'#111111', borda:false }] : []);
+  renderSlideFormFields(conteudo);
   document.getElementById('slideFormOverlay').classList.add('open');
 }
 function closeSlideForm(){ document.getElementById('slideFormOverlay').classList.remove('open'); }
+
 function renderSlideFormFields(conteudo){
   conteudo = conteudo || {};
   const tipo = document.getElementById('sfTipo').value;
@@ -1367,12 +1391,14 @@ function renderSlideFormFields(conteudo){
   const fieldStyle = "background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12.5px;width:100%;margin-top:6px;";
   if (tipo==='quadro'){
     holder.innerHTML = `
-      <div class="ms-area-label" style="margin-top:6px;">Texto</div>
-      <textarea id="sfTexto" rows="4" style="${fieldStyle}">${escapeHtml(conteudo.texto||'')}</textarea>
-      <div class="ms-area-label" style="margin-top:6px;">Cor do texto</div>
-      <select id="sfCor" style="${fieldStyle}">
-        ${['#111111','#1E6FA8','#0E7C6B','#8a7400','#B23A1E','#FFFFFF'].map(c=>`<option value="${c}" ${conteudo.cor===c?'selected':''}>${c}</option>`).join('')}
-      </select>`;
+      <div class="ms-area-label" style="margin-top:6px;">Conteúdo do quadro</div>
+      <div id="sfBlocosList" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button type="button" class="btn-ghost" data-action="addBloco" data-a="texto" style="flex:1;">+ Texto</button>
+        <button type="button" class="btn-ghost" data-action="addBloco" data-a="imagem" style="flex:1;">+ Imagem</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">Cada bloco aparece um abaixo do outro no slide, na ordem que você adicionar aqui.</div>`;
+    renderBlocosList();
   } else if (tipo==='url'){
     holder.innerHTML = `<div class="ms-area-label" style="margin-top:6px;">URL</div><input id="sfUrl" value="${escapeAttr(conteudo.url||'')}" placeholder="https://..." style="${fieldStyle}">`;
   } else if (tipo==='ppt'){
@@ -1390,11 +1416,58 @@ function renderSlideFormFields(conteudo){
       </select>`;
   }
 }
+
+const BLOCO_CORES = ['#111111','#1E6FA8','#0E7C6B','#8a7400','#B23A1E','#FFFFFF'];
+function renderBlocosList(){
+  const el = document.getElementById('sfBlocosList');
+  if (!el) return;
+  if (!sfBlocos.length){
+    el.innerHTML = '<div style="font-size:11px;color:var(--text-faint);text-align:center;padding:10px;border:1px dashed var(--border);border-radius:8px;">Nenhum bloco ainda — adiciona texto ou imagem abaixo.</div>';
+    return;
+  }
+  el.innerHTML = sfBlocos.map((b,i)=>{
+    if (b.tipo === 'imagem'){
+      return `<div style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:10.5px;color:var(--text-faint);">🖼 Imagem</span>
+          <span class="del-btn" data-action="removeBloco" data-a="${i}" style="cursor:pointer;">🗑</span>
+        </div>
+        <input data-bloco-idx="${i}" data-bloco-field="url" value="${escapeAttr(b.url||'')}" placeholder="https://..." style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);">
+        <label style="font-size:10.5px;display:flex;align-items:center;gap:5px;margin-top:7px;color:var(--text-dim);"><input type="checkbox" data-bloco-idx="${i}" data-bloco-field="borda" ${b.borda?'checked':''} style="width:auto;"> Com borda</label>
+      </div>`;
+    }
+    return `<div style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:9px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:10.5px;color:var(--text-faint);">📝 Texto</span>
+        <span class="del-btn" data-action="removeBloco" data-a="${i}" style="cursor:pointer;">🗑</span>
+      </div>
+      <textarea data-bloco-idx="${i}" data-bloco-field="texto" rows="2" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);font-family:'Inter';">${escapeHtml(b.texto||'')}</textarea>
+      <div style="display:flex;gap:10px;margin-top:7px;align-items:center;">
+        <select data-bloco-idx="${i}" data-bloco-field="cor" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:11px;color:var(--text);">
+          ${BLOCO_CORES.map(cor=>`<option value="${cor}" ${b.cor===cor?'selected':''}>${cor}</option>`).join('')}
+        </select>
+        <label style="font-size:10.5px;display:flex;align-items:center;gap:5px;color:var(--text-dim);"><input type="checkbox" data-bloco-idx="${i}" data-bloco-field="borda" ${b.borda?'checked':''} style="width:auto;"> Com borda</label>
+      </div>
+    </div>`;
+  }).join('');
+}
+// campos dos blocos são criados/destruídos dinamicamente — delegação de
+// 'input'/'change' pra sincronizar sfBlocos sem precisar religar listener
+document.addEventListener('input', syncBlocoField);
+document.addEventListener('change', syncBlocoField);
+function syncBlocoField(e){
+  const el = e.target;
+  if (el.dataset.blocoIdx === undefined) return;
+  const idx = Number(el.dataset.blocoIdx), field = el.dataset.blocoField;
+  if (!sfBlocos[idx]) return;
+  sfBlocos[idx][field] = (el.type === 'checkbox') ? el.checked : el.value;
+}
+
 function saveSlideForm(){
   const tipo = document.getElementById('sfTipo').value;
   const titulo = document.getElementById('sfTitulo').value || 'Novo slide';
   let conteudo = {};
-  if (tipo==='quadro') conteudo = { texto: document.getElementById('sfTexto').value, cor: document.getElementById('sfCor').value };
+  if (tipo==='quadro') conteudo = { blocos: sfBlocos.filter(b => (b.tipo==='texto' && b.texto) || (b.tipo==='imagem' && b.url)) };
   else if (tipo==='url') conteudo = { url: document.getElementById('sfUrl').value };
   else if (tipo==='ppt') conteudo = { link: document.getElementById('sfLink').value };
   else if (tipo==='upload') conteudo = { url: document.getElementById('sfImgUrl').value };
