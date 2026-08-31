@@ -1736,9 +1736,9 @@ const INDICATOR_CONFIG = {
   'Volume Real': { mode:'sum', scale:1 },
   'Volume Real V3': { mode:'sum', scale:1 },
   'Volume Real V4': { mode:'sum', scale:1 },
-  'Plano vs Volume Real': { mode:'avg', scale:1 },
-  'Plano vs Volume Real V3': { mode:'avg', scale:1 },
-  'Plano vs Volume Real V4': { mode:'avg', scale:1 },
+  'Plano vs Volume Real': { mode:'avg', scale:100 },
+  'Plano vs Volume Real V3': { mode:'avg', scale:100 },
+  'Plano vs Volume Real V4': { mode:'avg', scale:100 },
   'Ociosidade': { mode:'avg', scale:100 },
   'Abs Geral': { mode:'avg', scale:100 },
   'DOT': { mode:'avg', scale:1 },
@@ -1882,14 +1882,24 @@ const dataLabelsPlugin = {
     const { ctx } = chart;
     chart.data.datasets.forEach((dataset, i) => {
       const meta = chart.getDatasetMeta(i);
-      if (meta.hidden || meta.type !== 'bar') return;
+      if (meta.hidden) return;
+      const isBarType = meta.type === 'bar';
+      const isLabeledLine = meta.type === 'line' && dataset._showLabel;
+      if (!isBarType && !isLabeledLine) return;
       ctx.save();
       meta.data.forEach((el, idx) => {
         const value = dataset.data[idx];
         if (value === null || value === undefined) return;
         const pct = dataset._pctValues ? dataset._pctValues[idx] : undefined;
         const wow = dataset._wow ? dataset._wow[idx] : undefined;
-        if (isHorizontal){
+        if (isLabeledLine){
+          // linha marcada pra mostrar rótulo (ex.: só "Geral" no ABS, sem
+          // poluir com T1/T2/T3) — um valor só, formatado como %.
+          ctx.font = "700 10.5px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          const txt = dataset._pctFormat ? Math.round(value) + '%' : formatCompact(value);
+          ctx.fillText(txt, el.x, el.y - 8);
+        } else if (isHorizontal){
           ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
           ctx.fillText(formatCompact(value), el.x + 5, el.y);
@@ -2027,13 +2037,19 @@ function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
   if (raw[0]!=null && raw[1]!=null) wow[1] = raw[1]-raw[0];   // W33 vs W32
   if (raw[1]!=null && raw[2]!=null) wow[2] = raw[2]-raw[1];   // W34 vs W33
   if (raw[2]!=null && raw[3]!=null) wow[n-1] = raw[3]-raw[2]; // coluna final (W35) vs W34
-  const colors = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : '#111111');
+  // semanas fechadas = preto; dias soltos (Dom-Sáb) = branco com borda
+  // amarela, pra diferenciar visualmente; a última coluna (semana atual
+  // fechada) fica amarela sólida, em destaque.
+  const bg = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
+  const border = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bg[i]);
+  const borderWidth = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
   mkChart(canvasId, { type:'bar',
     data:{ labels: real.labels, datasets:[
-      { label:'Volume real', data: real.values, backgroundColor: colors, borderRadius:6, maxBarThickness:36,
+      { label:'Volume real', data: real.values, backgroundColor: bg, borderColor: border, borderWidth: borderWidth, borderRadius:6, maxBarThickness:36,
         _pctValues: plano.values, _wow: wow }
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
+    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:40 } },
+      plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [real.weekRangeLabel]);
 }
@@ -2042,10 +2058,14 @@ function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
 // extra com o total da semana mais recente em destaque (amarelo)
 function renderVolumeCohort(canvasId, indicador, weekRangeId){
   const s = seriesForCohort(indicador, 'Flow', 'Geral');
-  const colors = s.labels.map((_,i)=> i===s.labels.length-1 ? '#FFE600' : '#111111');
+  const n = s.labels.length;
+  const bg = s.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
+  const border = s.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bg[i]);
+  const borderWidth = s.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
   mkChart(canvasId, { type:'bar',
-    data:{ labels: s.labels, datasets:[{ label:'Volume', data:s.values, backgroundColor:colors, borderRadius:6, maxBarThickness:36 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
+    data:{ labels: s.labels, datasets:[{ label:'Volume', data:s.values, backgroundColor:bg, borderColor:border, borderWidth:borderWidth, borderRadius:6, maxBarThickness:36 }] },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:26 } },
+      plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [s.weekRangeLabel]);
 }
@@ -2065,13 +2085,13 @@ function renderAbsCohort(canvasId, indicador, weekRangeId){
   });
   mkChart(canvasId, { type:'line',
     data:{ labels: geral.labels, datasets:[
-      Object.assign({ label:'Geral' }, serieDataset(geral, TURNO_COLORS.Geral)),
+      Object.assign({ label:'Geral', _showLabel:true, _pctFormat:true }, serieDataset(geral, TURNO_COLORS.Geral)),
       Object.assign({ label:'T1' }, serieDataset(t1, TURNO_COLORS.T1)),
       Object.assign({ label:'T2' }, serieDataset(t2, TURNO_COLORS.T2)),
       Object.assign({ label:'T3' }, serieDataset(t3, TURNO_COLORS.T3)),
       { label:'Meta 12%', data: geral.values.map(()=>META), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false }
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
+    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:24 } }, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>v+'%' }) }) } }
   });
   setWeekRange(weekRangeId, [geral.weekRangeLabel]);
