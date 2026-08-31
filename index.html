@@ -810,6 +810,11 @@ document.addEventListener('click', function(e){
   const el = e.target.closest('[data-action]');
   if (!el) return;
   const a = el.dataset.a, b = el.dataset.b, c = el.dataset.c;
+  // qualquer ação que não seja "abrir o menu" já fecha os menus abertos
+  // (executar a ação escolhida não precisa deixar o dropdown na tela)
+  if (el.dataset.action !== 'toggleMenu') {
+    document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'));
+  }
   switch (el.dataset.action){
     case 'goto': goTo(a); break;
     case 'closeModal': closeModal(); break;
@@ -1085,7 +1090,16 @@ function toggleMenu(btn, ev){
   btn.querySelector('.menu').classList.toggle('open');
   if (ev) ev.stopPropagation();
 }
-document.addEventListener('click', ()=> document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open')));
+// Fecha os menus (⋮) quando clica FORA de qualquer icon-btn — antes isso
+// disparava em TODO clique, inclusive nos botões de dentro do próprio
+// menu, fechando ele um instante depois de abrir (por isso "editar slide",
+// "criar slide" e "comentário" pareciam não fazer nada — o menu fechava
+// antes de registrar o clique no botão de dentro).
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.icon-btn')) {
+    document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'));
+  }
+});
 
 /* ====================================================================
    NAVEGAÇÃO — slide fixo + móvel juntos, ordenados por "ordem"
