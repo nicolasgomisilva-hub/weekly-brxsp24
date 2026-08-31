@@ -233,8 +233,11 @@ body{
 }
 .nav-arrow:hover{color:var(--text); border-color:#c9c9c0;}
 .progress{display:flex; gap:6px;}
-.progress span{width:6px;height:6px;border-radius:50%; background:var(--border);}
+.progress span{width:6px;height:6px;border-radius:50%; background:var(--border); cursor:pointer; position:relative;}
+.progress span::before{content:'';position:absolute;inset:-7px;} /* área de clique maior sem mudar o visual */
 .progress span.on{background:var(--accent); width:16px; border-radius:4px;}
+.progress span:hover{background:#c9c9c0;}
+.progress span.on:hover{background:var(--accent);}
 
 /* side panel (Ações/Comentários) */
 .side-panel{
@@ -1199,7 +1202,7 @@ function wireNavigation(){
     const areaSlides = visibleSlidesForArea(entry.area);
     const idxInArea = areaSlides.findIndex(s=>s.id===entry.id);
     const prog = bb.querySelector('.progress');
-    if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'"></span>').join('');
+    if (prog) prog.innerHTML = areaSlides.map((s,ix)=>'<span class="'+(ix===idxInArea?'on':'')+'" data-action="goto" data-a="'+s.id+'" title="'+escapeAttr(s.titulo||'')+'"></span>').join('');
   });
 }
 
