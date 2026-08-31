@@ -1402,20 +1402,23 @@ function saveSlideForm(){
     apiCall('apiUpdateSlide', { id: editingSlideId, titulo, tipo, conteudo })
       .catch(err => showToast('Não salvou no servidor ainda', ['O slide mudou só nesta tela por agora — erro: ' + err, 'Tenta salvar de novo; se persistir, recarregue a página antes de continuar editando.']));
   } else {
-    const tempId = 'temp-' + Date.now();
+    // ID gerado aqui mesmo, no navegador, e mandado pro Code.gs usar
+    // exatamente esse — sem isso, precisaríamos trocar o ID depois que a
+    // planilha respondesse, e essa troca podia fazer o slide "sumir" da
+    // tela justo na hora em que o salvamento de fundo confirmava.
+    const novoId = 'mv-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
     const areaSlides = allSlidesForArea(currentArea);
     const ordem = areaSlides.length ? Math.max.apply(null, areaSlides.map(s=>s.ordem)) + 1 : 1;
-    const novo = { id: tempId, area: currentArea, ordem, tipo, titulo, conteudo, fixo:false, visibilidade:'visivel', turno: currentTurno };
+    const novo = { id: novoId, area: currentArea, ordem, tipo, titulo, conteudo, fixo:false, visibilidade:'visivel', turno: currentTurno };
     STATE.slides.push(novo);
-    closeSlideForm(); renderSlideManagerBody(); wireNavigation();
-    apiCall('apiAddSlide', { area: currentArea, titulo, tipo, conteudo, turno: currentTurno }).then(res=>{
-      // troca o ID temporário pelo definitivo que a planilha gerou —
-      // sem isso, editar/mover/excluir esse slide depois não ia bater no ID certo
-      novo.id = res.id;
-      const el = document.querySelector('[data-slide="'+tempId+'"]');
-      if (el) el.dataset.slide = res.id;
-      renderSlideManagerBody();
-    }).catch(err => showToast('Não salvou no servidor ainda', ['O slide já apareceu aqui, mas ainda não foi pra planilha — erro: ' + err, 'Se recarregar a página agora, ele desaparece. Tenta de novo em alguns segundos.']));
+    closeSlideForm();
+    closeModal(); // fecha TAMBÉM o gerenciador de slides — sem isso o modal
+                   // fica na frente e parece que "não apareceu nada"
+    wireNavigation();
+    goTo(novoId); // pula direto pro slide recém-criado, pra garantir que
+                   // a pessoa VÊ ele de verdade, sem precisar navegar até lá
+    apiCall('apiAddSlide', { id: novoId, area: currentArea, titulo, tipo, conteudo, turno: currentTurno })
+      .catch(err => showToast('Não salvou no servidor ainda', ['O slide já apareceu aqui, mas ainda não foi pra planilha — erro: ' + err, 'Se recarregar a página agora, ele desaparece. Tenta de novo em alguns segundos.']));
   }
 }
 
