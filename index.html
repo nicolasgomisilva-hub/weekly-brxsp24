@@ -1214,8 +1214,21 @@ function matchesTurno(slideTurno){
   return currentTurno === 'Todos' || !st || st === 'Todos' || st === currentTurno;
 }
 function sameArea(a, b){ return String(a||'').trim() === String(b||'').trim(); }
+// Esqueleto fixo por área, usado só quando os dados nunca chegaram (erro
+// de conexão) — sem isso, se a API falhar, STATE.slides fica vazio e as
+// setas de navegação ficam sem saber pra onde ir, travando a apresentação
+// inteira mesmo pros slides fixos que já existem na tela.
+const FALLBACK_AREA_SLIDES = {
+  Safety: ['safety-1','safety-2','safety-3'],
+  Flow: ['flow-1','flow-2'],
+  Abs: ['abs-1'],
+  Prod: ['prod-1'],
+  Qualidade: ['qualidade-1']
+};
 function visibleSlidesForArea(area){
-  return STATE.slides.filter(s => sameArea(s.area, area) && s.visibilidade !== 'oculto' && matchesTurno(s.turno)).sort((a,b)=>a.ordem-b.ordem);
+  const real = STATE.slides.filter(s => sameArea(s.area, area) && s.visibilidade !== 'oculto' && matchesTurno(s.turno)).sort((a,b)=>a.ordem-b.ordem);
+  if (real.length) return real;
+  return (FALLBACK_AREA_SLIDES[area]||[]).map((id,ix)=>({ id, area, ordem:ix+1, titulo:id }));
 }
 function allSlidesForArea(area){
   return STATE.slides.filter(s => sameArea(s.area, area)).sort((a,b)=>a.ordem-b.ordem);
@@ -2140,22 +2153,23 @@ function renderVolumeCohort(canvasId, indicador, weekRangeId){
 // mais próxima visualmente (eixo ajustado pro intervalo real dos dados).
 function renderAbsCohort(canvasId, indicador, weekRangeId){
   const geral = seriesForCohort(indicador, 'Abs', 'Geral');
-  const t1 = seriesForCohort(indicador, 'Abs', 'T1');
-  const t2 = seriesForCohort(indicador, 'Abs', 'T2');
-  const t3 = seriesForCohort(indicador, 'Abs', 'T3');
   const META = 12;
   const serieDataset = (s, cor) => ({
     data: s.values, borderColor: cor, backgroundColor: cor + '22', fill:true,
     tension:.3, pointRadius:2.5, borderWidth:2
   });
+  // Com "Todos" selecionado na capa, mostra os 3 turnos junto do Geral.
+  // Com um turno específico selecionado, mostra só Geral + aquele turno +
+  // Meta — os outros dois turnos saem, pra não poluir a leitura.
+  const datasets = [ Object.assign({ label:'Geral', _showLabel:true, _pctFormat:true }, serieDataset(geral, TURNO_COLORS.Geral)) ];
+  if (currentTurno === 'Todos') {
+    ['T1','T2','T3'].forEach(t => datasets.push(Object.assign({ label:t }, serieDataset(seriesForCohort(indicador,'Abs',t), TURNO_COLORS[t]))));
+  } else {
+    datasets.push(Object.assign({ label:currentTurno }, serieDataset(seriesForCohort(indicador,'Abs',currentTurno), TURNO_COLORS[currentTurno])));
+  }
+  datasets.push({ label:'Meta 12%', data: geral.values.map(()=>META), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false });
   mkChart(canvasId, { type:'line',
-    data:{ labels: geral.labels, datasets:[
-      Object.assign({ label:'Geral', _showLabel:true, _pctFormat:true }, serieDataset(geral, TURNO_COLORS.Geral)),
-      Object.assign({ label:'T1' }, serieDataset(t1, TURNO_COLORS.T1)),
-      Object.assign({ label:'T2' }, serieDataset(t2, TURNO_COLORS.T2)),
-      Object.assign({ label:'T3' }, serieDataset(t3, TURNO_COLORS.T3)),
-      { label:'Meta 12%', data: geral.values.map(()=>META), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false }
-    ]},
+    data:{ labels: geral.labels, datasets },
     options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:24 } }, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>v+'%' }) }) } }
   });
