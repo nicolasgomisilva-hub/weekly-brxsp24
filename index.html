@@ -186,8 +186,8 @@ body{
 .area-node-eyebrow{font-size:10px; font-family:'IBM Plex Mono'; color:var(--text-faint); letter-spacing:1px;}
 .area-node-title{font-family:'Sora'; font-weight:800; font-size:19px; margin-top:6px;}
 .area-node-status{font-size:10.5px; color:var(--text-faint); margin-top:6px;}
-.area-arrow{color:var(--text-faint); font-size:22px; margin:0 6px;}
-.area-node.pending{opacity:.45; cursor:default;}
+.area-arrow{color:var(--text-dim); font-size:34px; margin:0 10px; font-weight:300;}
+.area-node.pending{opacity:.45; cursor:default;} /* não usado mais nos slides atuais — mantido pra uso futuro se precisar */
 .area-node.pending:hover{transform:none; border-color:var(--border); background:var(--panel);}
 .area-node.pending:hover .area-node-title{color:var(--text);}
 
@@ -442,26 +442,26 @@ body{
           <div class="area-node-title">Safety</div>
           <div class="area-node-status">2 indicadores</div>
         </div>
-        <div class="area-arrow">›</div>
+        <div class="area-arrow">→</div>
         <div class="area-node" data-action="goto" data-a="flow-1">
           <div class="area-node-eyebrow">02</div>
           <div class="area-node-title">Flow</div>
           <div class="area-node-status">3 indicadores</div>
         </div>
-        <div class="area-arrow">›</div>
+        <div class="area-arrow">→</div>
         <div class="area-node" data-action="goto" data-a="abs-1">
           <div class="area-node-eyebrow">03</div>
           <div class="area-node-title">Abs</div>
           <div class="area-node-status">3 indicadores</div>
         </div>
-        <div class="area-arrow">›</div>
+        <div class="area-arrow">→</div>
         <div class="area-node" data-action="goto" data-a="prod-1">
           <div class="area-node-eyebrow">04</div>
           <div class="area-node-title">Prod</div>
           <div class="area-node-status">2 indicadores</div>
         </div>
-        <div class="area-arrow">›</div>
-        <div class="area-node pending" data-action="goto" data-a="qualidade-1">
+        <div class="area-arrow">→</div>
+        <div class="area-node" data-action="goto" data-a="qualidade-1">
           <div class="area-node-eyebrow">05</div>
           <div class="area-node-title">Qualidade</div>
           <div class="area-node-status">a definir</div>
