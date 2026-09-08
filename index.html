@@ -1968,8 +1968,6 @@ const dataLabelsPlugin = {
       meta.data.forEach((el, idx) => {
         const value = dataset.data[idx];
         if (value === null || value === undefined) return;
-        const pct = dataset._pctValues ? dataset._pctValues[idx] : undefined;
-        const wow = dataset._wow ? dataset._wow[idx] : undefined;
         if (isLabeledLine){
           // linha marcada pra mostrar rótulo (ex.: só "Geral" no ABS, sem
           // poluir com T1/T2/T3) — um valor só, formatado como %.
@@ -1981,21 +1979,20 @@ const dataLabelsPlugin = {
           ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
           ctx.fillText(formatCompact(value), el.x + 5, el.y);
-        } else if (pct !== undefined && pct !== null){
-          // duas linhas: % (com seta WtW quando disponível) em cima, número absoluto embaixo
-          ctx.textAlign = 'center';
-          let pctTxt = Math.round(pct) + '%';
-          ctx.font = "700 11px 'Inter',sans-serif";
+        } else if (dataset._wow){
+          // seta de tendência (verde sobe / vermelho desce) + quantidade
+          // de pacotes — comparando o volume mesmo, não mais o percentual
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          const wow = dataset._wow[idx];
+          let txt = formatCompact(value);
           if (wow !== undefined && wow !== null){
             ctx.fillStyle = wow >= 0 ? '#1F8A4C' : '#C22323';
-            pctTxt = (wow >= 0 ? '▲ ' : '▼ ') + pctTxt;
+            txt = (wow >= 0 ? '▲ ' : '▼ ') + txt;
           } else {
             ctx.fillStyle = '#111111';
           }
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(pctTxt, el.x, el.y - 16);
-          ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#63625C';
-          ctx.fillText(formatCompact(value), el.x, el.y - 3);
+          ctx.font = "700 11px 'Inter',sans-serif";
+          ctx.fillText(txt, el.x, el.y - 3);
         } else {
           ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -2022,9 +2019,12 @@ function multiLineChart(canvasId, labels, series, pct){
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }) } } });
 }
-function groupedBarChart(canvasId, labels, series, pct){
-  mkChart(canvasId, { type:'bar',
-    data:{ labels, datasets: series.map(s=>({ label:s.label, data:s.data, backgroundColor:s.color, borderRadius:5, maxBarThickness:26 })) },
+function groupedBarChart(canvasId, labels, series, pct, meta){
+  const datasets = series.map(s=>({ type:'bar', label:s.label, data:s.data, backgroundColor:s.color, borderRadius:5, maxBarThickness:26 }));
+  if (meta !== undefined && meta !== null){
+    datasets.push({ type:'line', label:'Meta ' + meta + (pct?'%':''), data: labels.map(()=>meta), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false });
+  }
+  mkChart(canvasId, { data:{ labels, datasets },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:legendOpts() },
       scales:{ x:AXIS_BASE, y:Object.assign({},AXIS_BASE,{ ticks:Object.assign({},AXIS_BASE.ticks,{ callback:v=>pct?v+'%':v }) }) } } });
 }
@@ -2072,16 +2072,16 @@ function renderComboBarLinha(canvasId, indicador, area, weekRangeId){
 }
 
 // barra por turno, sem linha — DOT/OOT
-function renderGroupedTurno(canvasId, indicador, area, weekRangeId, pct){
+function renderGroupedTurno(canvasId, indicador, area, weekRangeId, pct, meta){
   const eff = effectiveTurno(canvasId);
   if (eff === 'Todos'){
     const g = seriesFor(indicador,area,'Geral');
     const series = ['Geral','T1','T2','T3'].map(t=>({ label:t, data: seriesFor(indicador,area,t).values, color: TURNO_COLORS[t] }));
-    groupedBarChart(canvasId, g.weeks, series, pct);
+    groupedBarChart(canvasId, g.weeks, series, pct, meta);
     if (weekRangeId) setWeekRange(weekRangeId, g.weeks);
   } else {
     const s = seriesFor(indicador, area, eff);
-    groupedBarChart(canvasId, s.weeks, [{ label:eff, data:s.values, color: TURNO_COLORS[eff] || '#111111' }], pct);
+    groupedBarChart(canvasId, s.weeks, [{ label:eff, data:s.values, color: TURNO_COLORS[eff] || '#111111' }], pct, meta);
     if (weekRangeId) setWeekRange(weekRangeId, s.weeks);
   }
 }
@@ -2102,16 +2102,17 @@ function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
 }
 
 function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
-  // Volume real (barra) com rótulo de duas linhas: % de plano respeitado
-  // (com seta de tendência semana-a-semana) em cima, número absoluto embaixo.
+  // Volume real (barra) com rótulo de uma linha: seta de tendência (verde
+  // sobe / vermelho desce) + quantidade de pacotes — comparando o volume
+  // mesmo, não mais o percentual de respeito ao plano.
   const real = seriesForCohort(indicadorReal, 'Flow', 'Geral');
-  const plano = seriesForCohort(indicadorPlano, 'Flow', 'Geral');
+  const plano = seriesForCohort(indicadorPlano, 'Flow', 'Geral'); // ainda buscado, útil se quiser reativar % depois
   const n = real.labels.length;
   // seta WtW só nas colunas de SEMANA (W32,W33,W34 e a coluna extra do
   // final) — nos dias (Dom..Sáb) fica sem seta, comparar dia-a-dia não faz
   // tanto sentido aqui.
   const wow = new Array(n).fill(null);
-  const raw = plano.weeklyRaw; // [W32,W33,W34,W35] brutos
+  const raw = real.weeklyRaw; // [W32,W33,W34,W35] brutos — agora compara VOLUME, não mais %
   if (raw[0]!=null && raw[1]!=null) wow[1] = raw[1]-raw[0];   // W33 vs W32
   if (raw[1]!=null && raw[2]!=null) wow[2] = raw[2]-raw[1];   // W34 vs W33
   if (raw[2]!=null && raw[3]!=null) wow[n-1] = raw[3]-raw[2]; // coluna final (W35) vs W34
@@ -2124,7 +2125,7 @@ function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
   mkChart(canvasId, { type:'bar',
     data:{ labels: real.labels, datasets:[
       { label:'Volume real', data: real.values, backgroundColor: bg, borderColor: border, borderWidth: borderWidth, borderRadius:6, maxBarThickness:36,
-        _pctValues: plano.values, _wow: wow }
+        _wow: wow }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:40 } },
       plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
@@ -2165,7 +2166,7 @@ function renderAbsCohort(canvasId, indicador, weekRangeId){
   if (currentTurno === 'Todos') {
     ['T1','T2','T3'].forEach(t => datasets.push(Object.assign({ label:t }, serieDataset(seriesForCohort(indicador,'Abs',t), TURNO_COLORS[t]))));
   } else {
-    datasets.push(Object.assign({ label:currentTurno }, serieDataset(seriesForCohort(indicador,'Abs',currentTurno), TURNO_COLORS[currentTurno])));
+    datasets.push(Object.assign({ label:currentTurno, _showLabel:true, _pctFormat:true }, serieDataset(seriesForCohort(indicador,'Abs',currentTurno), TURNO_COLORS[currentTurno])));
   }
   datasets.push({ label:'Meta 12%', data: geral.values.map(()=>META), borderColor:'#B23A1E', borderDash:[6,6], borderWidth:2, pointRadius:0, fill:false });
   mkChart(canvasId, { type:'line',
@@ -2234,7 +2235,7 @@ function renderAllCharts(){
   tentarGrafico('chartAbsArea', ()=>renderAbsPareto('chartAbsArea', STATE.abs_area, 'AREA', '#E6C200'));
 
   // ---- Prod ----
-  tentarGrafico('chartDOT', ()=>renderGroupedTurno('chartDOT', 'DOT', 'Prod', 'weekRangeProd1a', true));
+  tentarGrafico('chartDOT', ()=>renderGroupedTurno('chartDOT', 'DOT', 'Prod', 'weekRangeProd1a', true, 98));
   tentarGrafico('chartOOT', ()=>renderGroupedTurno('chartOOT', 'OOT', 'Prod', 'weekRangeProd1b', true));
 
   tentarGrafico('updateCoverWeekLabel', updateCoverWeekLabel);
