@@ -1969,9 +1969,9 @@ const dataLabelsPlugin = {
         const value = dataset.data[idx];
         if (value === null || value === undefined) return;
         if (isLabeledLine){
-          // linha marcada pra mostrar rótulo (ex.: só "Geral" no ABS, sem
-          // poluir com T1/T2/T3) — um valor só, formatado como %.
-          ctx.font = "700 10.5px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
+          // linha marcada pra mostrar rótulo (ex.: Geral, ou o turno
+          // isolado no ABS) — cor do texto igual à cor da própria linha
+          ctx.font = "700 10.5px 'Inter',sans-serif"; ctx.fillStyle = dataset.borderColor || '#111111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
           const txt = dataset._pctFormat ? Math.round(value) + '%' : formatCompact(value);
           ctx.fillText(txt, el.x, el.y - 8);
@@ -2102,33 +2102,31 @@ function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
 }
 
 function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
-  // Volume real (barra) com rótulo de uma linha: seta de tendência (verde
-  // sobe / vermelho desce) + quantidade de pacotes — comparando o volume
-  // mesmo, não mais o percentual de respeito ao plano.
+  // Duas barras (Plano x Real) em número absoluto. A planilha só guarda o
+  // PERCENTUAL de respeito ao plano (Real/Plano) — não tem uma coluna de
+  // "planejado" pronta — então calculamos o planejado de volta:
+  // Plano = Real ÷ percentual.
   const real = seriesForCohort(indicadorReal, 'Flow', 'Geral');
-  const plano = seriesForCohort(indicadorPlano, 'Flow', 'Geral'); // ainda buscado, útil se quiser reativar % depois
+  const planoPct = seriesForCohort(indicadorPlano, 'Flow', 'Geral'); // % (0-100) = Real/Plano
   const n = real.labels.length;
-  // seta WtW só nas colunas de SEMANA (W32,W33,W34 e a coluna extra do
-  // final) — nos dias (Dom..Sáb) fica sem seta, comparar dia-a-dia não faz
-  // tanto sentido aqui.
-  const wow = new Array(n).fill(null);
-  const raw = real.weeklyRaw; // [W32,W33,W34,W35] brutos — agora compara VOLUME, não mais %
-  if (raw[0]!=null && raw[1]!=null) wow[1] = raw[1]-raw[0];   // W33 vs W32
-  if (raw[1]!=null && raw[2]!=null) wow[2] = raw[2]-raw[1];   // W34 vs W33
-  if (raw[2]!=null && raw[3]!=null) wow[n-1] = raw[3]-raw[2]; // coluna final (W35) vs W34
+  const planoAbs = real.values.map((v, i) => {
+    const pct = planoPct.values[i];
+    if (v === null || v === undefined || pct === null || pct === undefined || pct === 0) return null;
+    return Math.round((v / (pct / 100)) * 10) / 10;
+  });
   // semanas fechadas = preto; dias soltos (Dom-Sáb) = branco com borda
-  // amarela, pra diferenciar visualmente; a última coluna (semana atual
-  // fechada) fica amarela sólida, em destaque.
-  const bg = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
-  const border = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bg[i]);
-  const borderWidth = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
+  // amarela; a última coluna (semana mais recente fechada) fica amarela
+  // sólida, em destaque — só na barra "Real".
+  const bgReal = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
+  const borderReal = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bgReal[i]);
+  const borderWidthReal = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
   mkChart(canvasId, { type:'bar',
     data:{ labels: real.labels, datasets:[
-      { label:'Volume real', data: real.values, backgroundColor: bg, borderColor: border, borderWidth: borderWidth, borderRadius:6, maxBarThickness:36,
-        _wow: wow }
+      { label:'Plano', data: planoAbs, backgroundColor:'#C9C9C0', borderRadius:6, maxBarThickness:26 },
+      { label:'Real', data: real.values, backgroundColor:bgReal, borderColor:borderReal, borderWidth:borderWidthReal, borderRadius:6, maxBarThickness:26 }
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:40 } },
-      plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
+    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:26 } },
+      plugins:{ legend:legendOpts() }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [real.weekRangeLabel]);
 }
