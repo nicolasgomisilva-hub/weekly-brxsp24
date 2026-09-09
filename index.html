@@ -1853,10 +1853,10 @@ function isWeekComplete(weekLabel){
   const { end } = getLastCompleteWeek(new Date());
   // compara como TEXTO (YYYY-MM-DD vs YYYY-MM-DD), nunca via objeto Date —
   // misturar "new Date(string)" (que assume UTC) com um Date local causava
-  // erro de fuso horário bem na borda da semana, fechando ela cedo demais
-  // e cortando os últimos dias de fora da soma.
+  // erro de fuso horário bem na borda da semana.
   return dateStr <= toLocalISO(end);
 }
+
 function updateCoverWeekLabel(){
   const el = document.getElementById('coverWeekLabel');
   if (!el) return;
@@ -2182,7 +2182,7 @@ function renderVolumeCohort(canvasId, indicador, weekRangeId){
   // recarregar a página, e nunca mexe na planilha nem no que os outros
   // veem — é só uma correção visual local, temporária.
   if (canvasId === 'chartVolume') {
-    const overrideRaw = localStorage.getItem('overrideVolumeFinal') || '641000';
+    const overrideRaw = localStorage.getItem('overrideVolumeFinal');
     if (overrideRaw) {
       const overrideVal = parseFloat(overrideRaw.replace(',', '.').replace(/[^0-9.]/g, ''));
       if (!isNaN(overrideVal) && n > 0) s.values[n-1] = overrideVal;
