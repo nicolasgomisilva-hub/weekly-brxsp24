@@ -1839,7 +1839,11 @@ function isWeekComplete(weekLabel){
   const dateStr = meta[weekLabel];
   if (!dateStr) return true; // sem metadado de data, não tem como filtrar — deixa passar
   const { end } = getLastCompleteWeek(new Date());
-  return new Date(dateStr) <= end;
+  // compara como TEXTO (YYYY-MM-DD vs YYYY-MM-DD), nunca via objeto Date —
+  // misturar "new Date(string)" (que assume UTC) com um Date local causava
+  // erro de fuso horário bem na borda da semana, fechando ela cedo demais
+  // e cortando os últimos dias de fora da soma.
+  return dateStr <= toLocalISO(end);
 }
 function updateCoverWeekLabel(){
   const el = document.getElementById('coverWeekLabel');
