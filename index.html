@@ -1871,6 +1871,16 @@ function lastWeeks(weekObj, n){
     .sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10));
   return keys.slice(-n);
 }
+// Igual à de cima, mas SEM filtrar por "semana completa" — usada
+// especificamente pelo gráfico "cohort" (3 semanas + 7 dias + coluna
+// final), cujo propósito é acompanhar a semana MAIS RECENTE em
+// andamento, dia a dia. Filtrar essa semana de fora tirava justamente o
+// que o gráfico existe pra mostrar.
+function lastWeeksRaw(weekObj, n){
+  return Object.keys(weekObj||{})
+    .sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10))
+    .slice(-n);
+}
 function seriesFor(indicador, area, turno){
   const cfg = INDICATOR_CONFIG[indicador] || { mode:'sum', scale:1 };
   const row = pickIndicator(indicador, area, turno);
@@ -1908,15 +1918,31 @@ function seriesForCohort(indicador, area, turno){
   const row = pickIndicator(indicador, area, turno);
   if (!row) return { labels:[], values:[], weekRangeLabel:'', weeklyRaw:[] };
   const src = cfg.mode==='sum' ? row.weekly_sum : row.weekly_avg;
-  const semanas = lastWeeks(src, 4); // ex: [W32,W33,W34,W35]
-  const priorWeeks = semanas.slice(0, -1); // [W32,W33,W34]
-  const lastWeek = semanas[semanas.length-1]; // W35 (a mais recente completa)
+  // Sem filtro de "completa" aqui de propósito — essa coluna final existe
+  // JUSTAMENTE pra acompanhar a semana mais recente em andamento, dia a
+  // dia. Filtrar ela de fora tirava exatamente o que essa visão deveria
+  // mostrar.
+  const semanas = lastWeeksRaw(src, 4); // ex: [W33,W34,W35,W36]
+  const priorWeeks = semanas.slice(0, -1); // [W33,W34,W35]
+  const lastWeek = semanas[semanas.length-1]; // W36 (a mais recente disponível, mesmo incompleta)
   const labels = [], values = [];
   priorWeeks.forEach(w=>{
     labels.push(w);
     values.push(src[w]!==undefined ? Math.round(src[w]*cfg.scale*10)/10 : null);
   });
-  const { start } = getLastCompleteWeek(new Date());
+  // Os 7 dias vêm da PRÓPRIA semana "lastWeek" (usando a data mais recente
+  // que a planilha registra pra ela), nunca calculados a partir da data de
+  // "hoje" no navegador — assim nunca desalinha com a coluna final, e
+  // continua certo mesmo se a numeração de semana da planilha não bater
+  // 100% com domingo-sábado do calendário.
+  const metaDate = (STATE.weekMeta||{})[lastWeek];
+  let start;
+  if (metaDate) {
+    const [y,m,d] = metaDate.split('-').map(Number);
+    start = new Date(y, m-1, d - 6); // domingo daquela semana
+  } else {
+    start = getLastCompleteWeek(new Date()).start; // sem metadado, cai num cálculo por data de hoje
+  }
   for (let i=0;i<7;i++){
     const d = new Date(start); d.setDate(start.getDate()+i);
     const iso = toLocalISO(d);
@@ -1924,7 +1950,7 @@ function seriesForCohort(indicador, area, turno){
     labels.push(DIAS_SEMANA[i]);
     values.push(v!==undefined ? Math.round(v*cfg.scale*10)/10 : null);
   }
-  // coluna extra no final: total/média da semana mais recente (ex. W35),
+  // coluna extra no final: total/média da semana mais recente (lastWeek),
   // pra dar visão fechada dela junto com o detalhe diário
   labels.push(lastWeek || 'W?');
   values.push(lastWeek && src[lastWeek]!==undefined ? Math.round(src[lastWeek]*cfg.scale*10)/10 : null);
