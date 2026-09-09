@@ -1979,20 +1979,18 @@ const dataLabelsPlugin = {
           ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
           ctx.fillText(formatCompact(value), el.x + 5, el.y);
-        } else if (dataset._wow){
-          // seta de tendência (verde sobe / vermelho desce) + quantidade
-          // de pacotes — comparando o volume mesmo, não mais o percentual
+        } else if (dataset._planoValues){
+          // duas linhas de texto (sem barra extra): Plano em cima (cinza),
+          // Real embaixo (preto) — Plano vem calculado a partir do % de
+          // respeito ao plano guardado na planilha.
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-          const wow = dataset._wow[idx];
-          let txt = formatCompact(value);
-          if (wow !== undefined && wow !== null){
-            ctx.fillStyle = wow >= 0 ? '#1F8A4C' : '#C22323';
-            txt = (wow >= 0 ? '▲ ' : '▼ ') + txt;
-          } else {
-            ctx.fillStyle = '#111111';
+          const planoV = dataset._planoValues[idx];
+          if (planoV !== null && planoV !== undefined){
+            ctx.font = "600 9.5px 'Inter',sans-serif"; ctx.fillStyle = '#8a8a83';
+            ctx.fillText('Plano ' + formatCompact(planoV), el.x, el.y - 16);
           }
-          ctx.font = "700 11px 'Inter',sans-serif";
-          ctx.fillText(txt, el.x, el.y - 3);
+          ctx.font = "700 11px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
+          ctx.fillText('Real ' + formatCompact(value), el.x, el.y - 3);
         } else {
           ctx.font = "600 10px 'Inter',sans-serif"; ctx.fillStyle = '#111111';
           ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -2102,10 +2100,10 @@ function renderMultiLinhaTurno(canvasId, indicador, area, weekRangeId, pct){
 }
 
 function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
-  // Duas barras (Plano x Real) em número absoluto. A planilha só guarda o
-  // PERCENTUAL de respeito ao plano (Real/Plano) — não tem uma coluna de
-  // "planejado" pronta — então calculamos o planejado de volta:
-  // Plano = Real ÷ percentual.
+  // Uma barra só (Real). O rótulo mostra as duas linhas de texto: Plano
+  // em cima (cinza) e Real embaixo (preto), sem precisar de uma segunda
+  // barra. Plano é calculado de volta a partir do percentual de respeito
+  // ao plano guardado na planilha: Plano = Real ÷ percentual.
   const real = seriesForCohort(indicadorReal, 'Flow', 'Geral');
   const planoPct = seriesForCohort(indicadorPlano, 'Flow', 'Geral'); // % (0-100) = Real/Plano
   const n = real.labels.length;
@@ -2116,17 +2114,17 @@ function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
   });
   // semanas fechadas = preto; dias soltos (Dom-Sáb) = branco com borda
   // amarela; a última coluna (semana mais recente fechada) fica amarela
-  // sólida, em destaque — só na barra "Real".
-  const bgReal = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
-  const borderReal = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bgReal[i]);
-  const borderWidthReal = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
+  // sólida, em destaque.
+  const bg = real.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
+  const border = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bg[i]);
+  const borderWidth = real.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
   mkChart(canvasId, { type:'bar',
     data:{ labels: real.labels, datasets:[
-      { label:'Plano', data: planoAbs, backgroundColor:'#C9C9C0', borderRadius:6, maxBarThickness:26 },
-      { label:'Real', data: real.values, backgroundColor:bgReal, borderColor:borderReal, borderWidth:borderWidthReal, borderRadius:6, maxBarThickness:26 }
+      { label:'Real', data: real.values, backgroundColor:bg, borderColor:border, borderWidth:borderWidth, borderRadius:6, maxBarThickness:36,
+        _planoValues: planoAbs }
     ]},
-    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:26 } },
-      plugins:{ legend:legendOpts() }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
+    options:{ responsive:true, maintainAspectRatio:false, layout:{ padding:{ top:40 } },
+      plugins:{ legend:{display:false} }, scales:{ x:AXIS_BASE, y:AXIS_BASE } }
   });
   setWeekRange(weekRangeId, [real.weekRangeLabel]);
 }
