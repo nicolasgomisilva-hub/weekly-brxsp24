@@ -1902,7 +1902,7 @@ function formatCompact(n){
   return String(Math.round(n*10)/10);
 }
 
-const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']; // planilha fecha a semana no domingo (começa segunda)
 // "Cohort": as últimas 3 semanas fechadas inteiras + a semana mais recente
 // quebrada dia a dia (Dom→Sáb) — em vez de 4 barras semanais, vira
 // [W32, W33, W34, Dom, Seg, Ter, Qua, Qui, Sex, Sáb].
