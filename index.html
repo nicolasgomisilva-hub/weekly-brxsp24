@@ -581,12 +581,7 @@ body{
       <div class="grid-main-side">
         <div class="stack" style="gap:10px;">
           <div class="card" style="flex:1;">
-            <div class="card-head"><h3>Volume Real</h3><span class="card-headnote" id="weekRangeFlow1"></span>
-              <div style="display:flex;align-items:center;gap:5px;">
-                <input id="overrideVolumeInput" placeholder="corrigir W36" style="width:90px;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);color:var(--text);">
-                <button data-action="setOverrideVolume" class="geral-btn">Aplicar</button>
-              </div>
-            </div>
+            <div class="card-head"><h3>Volume Real</h3><span class="card-headnote" id="weekRangeFlow1"></span></div>
             <div class="card-body"><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
           </div>
           <div class="card" style="flex:1;">
@@ -907,13 +902,6 @@ document.addEventListener('click', function(e){
       break;
     }
     case 'gotoSlide': { closeModal(); goTo(a); break; }
-    case 'setOverrideVolume': {
-      const val = document.getElementById('overrideVolumeInput').value.trim();
-      if (val) localStorage.setItem('overrideVolumeFinal', val);
-      else localStorage.removeItem('overrideVolumeFinal');
-      renderAllCharts();
-      break;
-    }
     case 'navRelative': goToRelative(a); break;
     case 'toggleConcluido': toggleConcluido(a); break;
   }
@@ -2176,20 +2164,7 @@ function renderPlanoChart(canvasId, indicadorPlano, indicadorReal, weekRangeId){
 function renderVolumeCohort(canvasId, indicador, weekRangeId){
   const s = seriesForCohort(indicador, 'Flow', 'Geral');
   const n = s.labels.length;
-  // Correção manual de emergência pra última coluna (semana atual) — só
-  // pro Volume Real principal, pra apresentar HOJE sem depender do dado
-  // sincronizar. Fica guardado no navegador (localStorage), sobrevive a
-  // recarregar a página, e nunca mexe na planilha nem no que os outros
-  // veem — é só uma correção visual local, temporária.
-  if (canvasId === 'chartVolume') {
-    const overrideRaw = localStorage.getItem('overrideVolumeFinal');
-    if (overrideRaw) {
-      const overrideVal = parseFloat(overrideRaw.replace(',', '.').replace(/[^0-9.]/g, ''));
-      if (!isNaN(overrideVal) && n > 0) s.values[n-1] = overrideVal;
-    }
-    const input = document.getElementById('overrideVolumeInput');
-    if (input && overrideRaw) input.value = overrideRaw;
-  }
+  localStorage.removeItem('overrideVolumeFinal'); // limpa resquício do teste manual de emergência, se ainda existir
   const bg = s.labels.map((_,i)=> i===n-1 ? '#FFE600' : (i>=3 && i<=9 ? '#FFFFFF' : '#111111'));
   const border = s.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? '#FFE600' : bg[i]);
   const borderWidth = s.labels.map((_,i)=> (i>=3 && i<=9 && i!==n-1) ? 2 : 0);
