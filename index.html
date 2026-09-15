@@ -1061,6 +1061,7 @@ function boot(){
       throw new Error('O backend respondeu vazio (sem dados). Isso costuma acontecer quando a execução no Apps Script precisa de uma nova autorização — abra o editor do Apps Script uma vez, rode qualquer função pelo botão ▶ pra aceitar as permissões pedidas, e recarregue esta página.');
     }
     STATE = data;
+    GLOBAL_ANCHOR_WEEK = computeAnchorWeek_();
     const who = STATE.whoami || {};
     if (pill) {
       const backendV = who.appVersion || '?';
@@ -1865,7 +1866,21 @@ function updateCoverWeekLabel(){
 function pickIndicator(indicador, area, turno){
   return (STATE.scorecard||[]).find(r=> r.indicador===indicador && r.area===area && r.turno===turno);
 }
+let GLOBAL_ANCHOR_WEEK = null; // ultima semana FECHADA (mesma pra todo indicador, calculada 1x no boot)
+function computeAnchorWeek_(){
+  const allWeeks = new Set();
+  (STATE.scorecard||[]).forEach(r=> Object.keys(r.weekly_sum||{}).forEach(w=>allWeeks.add(w)));
+  const complete = Array.from(allWeeks).filter(isWeekComplete)
+    .sort((a,b)=>parseInt(a.replace('W',''),10)-parseInt(b.replace('W',''),10));
+  return complete.length ? complete[complete.length-1] : null;
+}
 function lastWeeks(weekObj, n){
+  if (GLOBAL_ANCHOR_WEEK) {
+    const anchorNum = parseInt(GLOBAL_ANCHOR_WEEK.replace('W',''),10);
+    const out = [];
+    for (let i = n - 1; i >= 0; i--) out.push('W' + (anchorNum - i));
+    return out;
+  }
   const keys = Object.keys(weekObj||{})
     .filter(isWeekComplete)
     .sort((a,b)=> parseInt(a.replace('W',''),10) - parseInt(b.replace('W',''),10));
