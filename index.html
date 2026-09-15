@@ -1828,12 +1828,17 @@ const INDICATOR_CONFIG = {
 /* ---- semana anterior completa (domingo→sábado), pra excluir a semana
    corrente/incompleta dos gráficos e pra montar o texto da capa ---- */
 function getLastCompleteWeek(hoje){
+  // A planilha fecha a semana Segunda->Domingo (ver DIAS_SEMANA acima),
+  // NAO Domingo->Sabado. Antes esta funcao assumia Dom->Sab, o que
+  // desalinhava 1 dia e fazia a ultima semana fechada real (ex.: W37,
+  // terminando no domingo) ser tratada como "incompleta" incorretamente.
   const d = new Date(hoje); d.setHours(0,0,0,0);
-  const dow = d.getDay();
-  const thisSunday = new Date(d); thisSunday.setDate(d.getDate() - dow);
-  const lastSaturday = new Date(thisSunday); lastSaturday.setDate(thisSunday.getDate() - 1); lastSaturday.setHours(23,59,59,999);
-  const lastSunday = new Date(thisSunday); lastSunday.setDate(thisSunday.getDate() - 7);
-  return { start: lastSunday, end: lastSaturday };
+  const dow = d.getDay(); // 0=Dom,1=Seg,...,6=Sab
+  const daysSinceMonday = (dow + 6) % 7; // Seg=0 ... Dom=6
+  const thisMonday = new Date(d); thisMonday.setDate(d.getDate() - daysSinceMonday);
+  const lastSunday = new Date(thisMonday); lastSunday.setDate(thisMonday.getDate() - 1); lastSunday.setHours(23,59,59,999);
+  const lastMonday = new Date(thisMonday); lastMonday.setDate(thisMonday.getDate() - 7);
+  return { start: lastMonday, end: lastSunday };
 }
 function isWeekComplete(weekLabel){
   const meta = STATE.weekMeta || {};
