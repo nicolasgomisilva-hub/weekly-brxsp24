@@ -1061,6 +1061,7 @@ function boot(){
       throw new Error('O backend respondeu vazio (sem dados). Isso costuma acontecer quando a execução no Apps Script precisa de uma nova autorização — abra o editor do Apps Script uma vez, rode qualquer função pelo botão ▶ pra aceitar as permissões pedidas, e recarregue esta página.');
     }
     STATE = data;
+    GLOBAL_ANCHOR_RANGE = getLastCompleteWeek(new Date());
     GLOBAL_ANCHOR_WEEK = computeAnchorWeek_();
     const who = STATE.whoami || {};
     if (pill) {
@@ -1828,17 +1829,14 @@ const INDICATOR_CONFIG = {
 /* ---- semana anterior completa (domingo→sábado), pra excluir a semana
    corrente/incompleta dos gráficos e pra montar o texto da capa ---- */
 function getLastCompleteWeek(hoje){
-  // A planilha fecha a semana Segunda->Domingo (ver DIAS_SEMANA acima),
-  // NAO Domingo->Sabado. Antes esta funcao assumia Dom->Sab, o que
-  // desalinhava 1 dia e fazia a ultima semana fechada real (ex.: W37,
-  // terminando no domingo) ser tratada como "incompleta" incorretamente.
+  // Regra do negocio (confirmada): semana = Domingo (1o dia) a Sabado
+  // (ultimo dia), independente de como a planilha agrupa as colunas.
   const d = new Date(hoje); d.setHours(0,0,0,0);
   const dow = d.getDay(); // 0=Dom,1=Seg,...,6=Sab
-  const daysSinceMonday = (dow + 6) % 7; // Seg=0 ... Dom=6
-  const thisMonday = new Date(d); thisMonday.setDate(d.getDate() - daysSinceMonday);
-  const lastSunday = new Date(thisMonday); lastSunday.setDate(thisMonday.getDate() - 1); lastSunday.setHours(23,59,59,999);
-  const lastMonday = new Date(thisMonday); lastMonday.setDate(thisMonday.getDate() - 7);
-  return { start: lastMonday, end: lastSunday };
+  const thisSunday = new Date(d); thisSunday.setDate(d.getDate() - dow);
+  const lastSaturday = new Date(thisSunday); lastSaturday.setDate(thisSunday.getDate() - 1); lastSaturday.setHours(23,59,59,999);
+  const lastSunday = new Date(thisSunday); lastSunday.setDate(thisSunday.getDate() - 7);
+  return { start: lastSunday, end: lastSaturday };
 }
 function isWeekComplete(weekLabel){
   const meta = STATE.weekMeta || {};
@@ -1871,13 +1869,29 @@ function updateCoverWeekLabel(){
 function pickIndicator(indicador, area, turno){
   return (STATE.scorecard||[]).find(r=> r.indicador===indicador && r.area===area && r.turno===turno);
 }
-let GLOBAL_ANCHOR_WEEK = null; // ultima semana FECHADA (mesma pra todo indicador, calculada 1x no boot)
+let GLOBAL_ANCHOR_WEEK = null; // rotulo da planilha mais proximo da ultima semana FECHADA (so pra eixo/legenda)
+let GLOBAL_ANCHOR_RANGE = null; // range de DATAS real (Dom->Sab) da ultima semana fechada, calculado 1x no boot
 function computeAnchorWeek_(){
   const allWeeks = new Set();
   (STATE.scorecard||[]).forEach(r=> Object.keys(r.weekly_sum||{}).forEach(w=>allWeeks.add(w)));
   const complete = Array.from(allWeeks).filter(isWeekComplete)
     .sort((a,b)=>parseInt(a.replace('W',''),10)-parseInt(b.replace('W',''),10));
   return complete.length ? complete[complete.length-1] : null;
+}
+// Soma (ou media) os valores de "dailyObj" nos "days" dias a partir de
+// "startDate". So retorna valor se os 7 dias existirem (senao a semana
+// esta genuinamente incompleta na fonte e deve aparecer como lacuna, nao
+// como numero parcial mascarado).
+function sumRange_(dailyObj, startDate, days, mode){
+  const vals = [];
+  for (let i = 0; i < days; i++){
+    const d = new Date(startDate); d.setDate(startDate.getDate() + i);
+    const v = (dailyObj||{})[toLocalISO(d)];
+    if (v !== undefined) vals.push(v);
+  }
+  if (vals.length < days) return undefined;
+  const sum = vals.reduce((a,b)=>a+b, 0);
+  return mode === 'sum' ? sum : sum / vals.length;
 }
 function lastWeeks(weekObj, n){
   if (GLOBAL_ANCHOR_WEEK) {
@@ -1907,7 +1921,16 @@ function seriesFor(indicador, area, turno){
   if (!row) return { weeks:[], values:[] };
   const src = cfg.mode==='sum' ? row.weekly_sum : row.weekly_avg;
   const weeks = lastWeeks(src, 4);
-  return { weeks, values: weeks.map(w => src[w]!==undefined ? Math.round(src[w]*cfg.scale*10)/10 : null) };
+  const values = weeks.map(w => src[w]!==undefined ? Math.round(src[w]*cfg.scale*10)/10 : null);
+  // A ultima barra (semana-ancora) e recalculada a partir dos dias reais
+  // (Dom->Sab por calendario), porque a semana da planilha nao bate
+  // exatamente com essa janela — usar weekly_sum aqui direto pegava um
+  // conjunto de dias levemente diferente do que realmente fechou.
+  if (values.length && GLOBAL_ANCHOR_RANGE){
+    const exact = sumRange_(row.daily, GLOBAL_ANCHOR_RANGE.start, 7, cfg.mode);
+    if (exact !== undefined) values[values.length-1] = Math.round(exact*cfg.scale*10)/10;
+  }
+  return { weeks, values };
 }
 function setWeekRange(elId, weeks){
   const el = document.getElementById(elId);
@@ -1922,7 +1945,7 @@ function formatCompact(n){
   return String(Math.round(n*10)/10);
 }
 
-const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']; // planilha fecha a semana no domingo (começa segunda)
+const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']; // regra do negocio: semana comeca domingo, termina sabado
 // "Cohort": as últimas 3 semanas fechadas inteiras + a semana mais recente
 // quebrada dia a dia (Dom→Sáb) — em vez de 4 barras semanais, vira
 // [W32, W33, W34, Dom, Seg, Ter, Qua, Qui, Sex, Sáb].
@@ -1938,47 +1961,45 @@ function seriesForCohort(indicador, area, turno){
   const row = pickIndicator(indicador, area, turno);
   if (!row) return { labels:[], values:[], weekRangeLabel:'', weeklyRaw:[] };
   const src = cfg.mode==='sum' ? row.weekly_sum : row.weekly_avg;
-  // Sem filtro de "completa" aqui de propósito — essa coluna final existe
-  // JUSTAMENTE pra acompanhar a semana mais recente em andamento, dia a
-  // dia. Filtrar ela de fora tirava exatamente o que essa visão deveria
-  // mostrar.
-  const semanas = lastWeeksRaw(src, 4); // ex: [W33,W34,W35,W36]
-  const priorWeeks = semanas.slice(0, -1); // [W33,W34,W35]
-  const lastWeek = semanas[semanas.length-1]; // W36 (a mais recente disponível, mesmo incompleta)
+  // Pedido explicito: NUNCA mostrar a semana corrente em andamento, nem
+  // aqui — antes esse grafico usava lastWeeksRaw (sem filtro) de proposito
+  // pra acompanhar a semana atual dia a dia, mas isso contraria a regra
+  // "todo indicador sempre mostra a ultima semana FECHADA". Por isso agora
+  // usa lastWeeks (ancorado) igual ao resto do app.
+  const semanas = lastWeeks(src, 4); // ex: [W34,W35,W36,W37]
+  const priorWeeks = semanas.slice(0, -1); // [W34,W35,W36]
+  const lastWeek = semanas[semanas.length-1]; // W37 (rotulo mais proximo, so pra exibicao)
   const labels = [], values = [];
   priorWeeks.forEach(w=>{
     labels.push(w);
     values.push(src[w]!==undefined ? Math.round(src[w]*cfg.scale*10)/10 : null);
   });
-  // Os 7 dias vêm da PRÓPRIA semana "lastWeek" (usando a data mais recente
-  // que a planilha registra pra ela), nunca calculados a partir da data de
-  // "hoje" no navegador — assim nunca desalinha com a coluna final, e
-  // continua certo mesmo se a numeração de semana da planilha não bater
-  // 100% com domingo-sábado do calendário.
-  const metaDate = (STATE.weekMeta||{})[lastWeek];
-  let start;
-  if (metaDate) {
-    const [y,m,d] = metaDate.split('-').map(Number);
-    start = new Date(y, m-1, d - 6); // domingo daquela semana
-  } else {
-    start = getLastCompleteWeek(new Date()).start; // sem metadado, cai num cálculo por data de hoje
-  }
+  // Os 7 dias sao SEMPRE os da ultima semana FECHADA de verdade (Domingo a
+  // Sabado por calendario, regra do negocio — nao a semana da planilha,
+  // que pode fechar num dia diferente).
+  const start = GLOBAL_ANCHOR_RANGE ? GLOBAL_ANCHOR_RANGE.start : getLastCompleteWeek(new Date()).start;
+  let lastWeekSum = 0, lastWeekCount = 0;
   for (let i=0;i<7;i++){
     const d = new Date(start); d.setDate(start.getDate()+i);
     const iso = toLocalISO(d);
     const v = (row.daily||{})[iso];
     labels.push(DIAS_SEMANA[i]);
     values.push(v!==undefined ? Math.round(v*cfg.scale*10)/10 : null);
+    if (v !== undefined){ lastWeekSum += v; lastWeekCount++; }
   }
-  // coluna extra no final: total/média da semana mais recente (lastWeek),
-  // pra dar visão fechada dela junto com o detalhe diário
+  // coluna extra no final: total/media da semana fechada, calculada a
+  // partir dos 7 dias reais (Dom->Sab) — so cai pro valor da planilha
+  // (weekly_sum[lastWeek]) se os 7 dias nao estiverem todos disponiveis.
+  const lastWeekExact = lastWeekCount === 7 ? (cfg.mode==='sum' ? lastWeekSum : lastWeekSum/lastWeekCount) : undefined;
+  const lastWeekAgg = lastWeekExact !== undefined ? lastWeekExact : (lastWeek && src[lastWeek]!==undefined ? src[lastWeek] : null);
   labels.push(lastWeek || 'W?');
-  values.push(lastWeek && src[lastWeek]!==undefined ? Math.round(src[lastWeek]*cfg.scale*10)/10 : null);
+  values.push(lastWeekAgg !== null ? Math.round(lastWeekAgg*cfg.scale*10)/10 : null);
 
   const weekRangeLabel = semanas.length ? (semanas[0] + '–' + semanas[semanas.length-1]) : '';
   // valores brutos das 4 semanas (sem arredondar), só pra calcular variação
   // semana-a-semana (WtW) — não usados pro desenho das barras em si
   const weeklyRaw = semanas.map(w => src[w]!==undefined ? src[w]*cfg.scale : null);
+  if (lastWeekExact !== undefined) weeklyRaw[weeklyRaw.length-1] = lastWeekExact*cfg.scale;
   return { labels, values, weekRangeLabel, weeklyRaw };
 }
 
