@@ -1869,14 +1869,20 @@ function updateCoverWeekLabel(){
 function pickIndicator(indicador, area, turno){
   return (STATE.scorecard||[]).find(r=> r.indicador===indicador && r.area===area && r.turno===turno);
 }
-let GLOBAL_ANCHOR_WEEK = null; // rotulo da planilha mais proximo da ultima semana FECHADA (so pra eixo/legenda)
+let GLOBAL_ANCHOR_WEEK = null; // rotulo pra eixo/legenda = semana atual - 1 (regra simples, sem checagem de completude)
 let GLOBAL_ANCHOR_RANGE = null; // range de DATAS real (Dom->Sab) da ultima semana fechada, calculado 1x no boot
+// Regra do usuario, direta: a semana atual e a MAIOR semana que aparece
+// em qualquer indicador (ex.: hoje W38); a semana anterior fechada e
+// sempre "semana atual - 1" (ex.: W37). Sem verificar se a W38 "comecou"
+// ou nao, sem olhar data nenhuma aqui — so aritmetica em cima do numero
+// da semana, que e o que o usuario realmente quer ver no rotulo.
 function computeAnchorWeek_(){
-  const allWeeks = new Set();
-  (STATE.scorecard||[]).forEach(r=> Object.keys(r.weekly_sum||{}).forEach(w=>allWeeks.add(w)));
-  const complete = Array.from(allWeeks).filter(isWeekComplete)
-    .sort((a,b)=>parseInt(a.replace('W',''),10)-parseInt(b.replace('W',''),10));
-  return complete.length ? complete[complete.length-1] : null;
+  let maxW = 0;
+  (STATE.scorecard||[]).forEach(r=> Object.keys(r.weekly_sum||{}).forEach(w=>{
+    const n = parseInt(String(w).replace('W',''),10);
+    if (!isNaN(n) && n > maxW) maxW = n;
+  }));
+  return maxW > 1 ? 'W' + (maxW - 1) : null;
 }
 // Soma (ou media) os valores de "dailyObj" nos "days" dias a partir de
 // "startDate". So retorna valor se os 7 dias existirem (senao a semana
